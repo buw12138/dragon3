@@ -631,37 +631,426 @@ class Game {
         const inventoryContent = document.getElementById('inventory-content');
         if (!inventoryContent || !this.player) return;
         
+        // 确保背包容量至少为24
+        const maxSlots = this.player.backpackSlots || 24;
+        
         let inventoryHTML = '<div class="inventory-grid">';
         
-        if (this.player.inventory.length === 0) {
-            inventoryHTML += '<div class="empty-inventory">背包空空如也</div>';
-        } else {
-            for (let i = 0; i < this.player.inventory.length; i++) {
+        // 生成物品格子
+        for (let i = 0; i < maxSlots; i++) {
+            const isEmpty = i >= this.player.inventory.length;
+            let slotHTML = '';
+            
+            if (isEmpty) {
+                // 空格子
+                slotHTML = `
+                    <div class="inventory-slot empty" data-slot="${i}">
+                        <span class="empty-slot">${i + 1}</span>
+                    </div>
+                `;
+            } else {
+                // 物品格子
                 const item = this.player.inventory[i];
-                const qualityColorClass = Utils.getQualityColorClass(item.quality);
+                const quality = item.quality || 0;
+                const qualityColorClass = Utils.getQualityColorClass(quality);
                 
-                inventoryHTML += '<div class="inventory-item">';
-                inventoryHTML += '<div class="item-name ' + qualityColorClass + '">' + item.name + '</div>';
-                inventoryHTML += '<div class="item-type">' + this.getItemTypeText(item.type) + '</div>';
-                inventoryHTML += '<div class="item-description">' + item.description + '</div>';
+                // 根据物品类型选择图标
+                let itemIcon = '?';
                 if (item.type === 'equipment') {
-                    inventoryHTML += '<button class="equip-button" data-index="' + i + '">装备</button>';
+                    itemIcon = this.getEquipmentIcon(item.slot);
+                } else if (item.type === 'consumable') {
+                    itemIcon = 'P';
+                } else if (item.type === 'skillBook') {
+                    itemIcon = 'B';
                 }
-                inventoryHTML += '</div>';
+                
+                // 截断物品名称
+                const truncatedName = this.truncateText(item.name, 8);
+                
+                slotHTML = `
+                    <div class="inventory-slot quality-${quality}" data-slot="${i}" data-item-id="${item.id}">
+                        <div class="inventory-item">
+                            <div class="item-icon">${itemIcon}</div>
+                            <div class="item-name ${qualityColorClass}">${truncatedName}</div>
+                        </div>
+                    </div>
+                `;
             }
+            
+            inventoryHTML += slotHTML;
         }
         
         inventoryHTML += '</div>';
         inventoryContent.innerHTML = inventoryHTML;
         
-        // 绑定装备按钮事件
-        const equipButtons = inventoryContent.querySelectorAll('.equip-button');
-        equipButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const index = parseInt(e.target.getAttribute('data-index'));
-                this.equipItemFromInventory(index);
-            });
+        // 添加悬浮窗
+        if (!document.getElementById('item-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.id = 'item-tooltip';
+            tooltip.className = 'item-tooltip';
+            document.body.appendChild(tooltip);
+        }
+        
+        // 添加右键菜单
+        if (!document.getElementById('context-menu')) {
+            const menu = document.createElement('div');
+            menu.id = 'context-menu';
+            menu.className = 'context-menu';
+            menu.innerHTML = `
+                <div class="context-menu-item" data-action="equip">装备</div>
+                <div class="context-menu-item" data-action="use">使用</div>
+                <div class="context-menu-item" data-action="drop">丢弃</div>
+            `;
+            document.body.appendChild(menu);
+        }
+        
+        // 绑定事件
+        this.bindItemEvents();
+    }
+    
+    // 获取装备图标
+    getEquipmentIcon(slot) {
+        const iconMap = {
+            mainHand: '⚔️',
+            offHand: '🛡️',
+            helmet: '👑',
+            chest: '🪖',
+            boots: '👢',
+            accessory1: '💍',
+            accessory2: '📿'
+        };
+        return iconMap[slot] || '📦';
+    }
+    
+    // 截断文本
+    truncateText(text, maxLength) {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    }
+    
+    // 绑定物品事件
+    bindItemEvents() {
+        // 移除现有的事件监听器（避免重复绑定）
+        document.querySelectorAll('.inventory-slot').forEach(slot => {
+            slot.removeEventListener('mouseenter', this.handleItemMouseEnter.bind(this));
+            slot.removeEventListener('mouseleave', this.handleItemMouseLeave.bind(this));
+            slot.removeEventListener('contextmenu', this.handleItemContextMenu.bind(this));
         });
+        
+        // 移除装备按钮，所有装备操作通过右键菜单进行
+        
+        // 绑定鼠标悬浮事件
+        document.querySelectorAll('.inventory-slot:not(.empty)').forEach(slot => {
+            slot.addEventListener('mouseenter', this.handleItemMouseEnter.bind(this));
+            slot.addEventListener('mouseleave', this.handleItemMouseLeave.bind(this));
+            slot.addEventListener('contextmenu', this.handleItemContextMenu.bind(this));
+        });
+        
+        // 绑定右键菜单事件
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', this.handleContextMenuItem.bind(this));
+        });
+        
+        // 点击其他地方关闭右键菜单
+        document.addEventListener('click', this.hideContextMenu.bind(this));
+    }
+    
+    // 处理物品鼠标悬浮进入
+    handleItemMouseEnter(e) {
+        const slot = e.currentTarget;
+        const slotIndex = parseInt(slot.getAttribute('data-slot'));
+        
+        if (slotIndex >= this.player.inventory.length) return;
+        
+        const item = this.player.inventory[slotIndex];
+        const tooltip = document.getElementById('item-tooltip');
+        
+        // 生成物品详情
+        tooltip.innerHTML = this.getItemDetails(item);
+        
+        // 显示悬浮窗
+        tooltip.style.display = 'block';
+        
+        // 定位悬浮窗
+        this.positionTooltip(e, tooltip);
+    }
+    
+    // 处理物品鼠标悬浮离开
+    handleItemMouseLeave() {
+        const tooltip = document.getElementById('item-tooltip');
+        tooltip.style.display = 'none';
+    }
+    
+    // 处理物品右键菜单
+    handleItemContextMenu(e) {
+        e.preventDefault();
+        
+        const slot = e.currentTarget;
+        const slotIndex = parseInt(slot.getAttribute('data-slot'));
+        
+        if (slotIndex >= this.player.inventory.length) return;
+        
+        const item = this.player.inventory[slotIndex];
+        const menu = document.getElementById('context-menu');
+        
+        // 保存当前选中的物品索引
+        menu.setAttribute('data-slot-index', slotIndex);
+        
+        // 根据物品属性显示/隐藏菜单项
+        const equipItem = menu.querySelector('[data-action="equip"]');
+        const useItem = menu.querySelector('[data-action="use"]');
+        const dropItem = menu.querySelector('[data-action="drop"]');
+        
+        // 设置默认状态
+        equipItem.classList.add('disabled');
+        useItem.classList.add('disabled');
+        dropItem.classList.remove('disabled');
+        
+        // 根据物品类型和属性启用相应菜单项
+        if (item.type === 'equipment' && (item.canEquip === undefined || item.canEquip !== false)) {
+            equipItem.classList.remove('disabled');
+        }
+        
+        if ((item.type === 'consumable' || item.type === 'skillBook') && 
+            (item.canUse === undefined || item.canUse !== false)) {
+            useItem.classList.remove('disabled');
+        }
+        
+        if (item.canDrop === undefined || item.canDrop !== false) {
+            dropItem.classList.remove('disabled');
+        }
+        
+        // 根据物品品质设置右键菜单边框颜色
+        const quality = item.quality || 0;
+        menu.className = 'context-menu';
+        menu.classList.add(`context-menu-quality-${quality}`);
+        
+        // 显示右键菜单
+        // 让菜单出现在鼠标指针位置附近，但稍微偏移一点避免遮挡
+        menu.style.left = (e.clientX + 10) + 'px';
+        menu.style.top = (e.clientY + 10) + 'px';
+        menu.style.display = 'block';
+    }
+    
+    // 处理右键菜单项点击
+    handleContextMenuItem(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const menu = document.getElementById('context-menu');
+        const slotIndex = parseInt(menu.getAttribute('data-slot-index'));
+        const action = e.target.getAttribute('data-action');
+        
+        if (e.target.classList.contains('disabled')) return;
+        
+        const item = this.player.inventory[slotIndex];
+        
+        switch (action) {
+            case 'equip':
+                this.equipItemFromInventory(slotIndex);
+                break;
+            case 'use':
+                this.useItemFromInventory(slotIndex);
+                break;
+            case 'drop':
+                this.dropItemFromInventory(slotIndex);
+                break;
+        }
+        
+        this.hideContextMenu();
+    }
+    
+    // 隐藏右键菜单
+    hideContextMenu() {
+        const menu = document.getElementById('context-menu');
+        if (menu) {
+            menu.style.display = 'none';
+        }
+    }
+    
+    // 定位悬浮窗
+    positionTooltip(e, tooltip) {
+        const rect = tooltip.getBoundingClientRect();
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // 默认显示在鼠标右侧和下方
+        let left = mouseX + 15;
+        let top = mouseY + 15;
+        
+        // 如果右侧不够空间，显示在左侧
+        if (left + rect.width > viewportWidth) {
+            left = mouseX - rect.width - 15;
+        }
+        
+        // 如果下方不够空间，显示在上方
+        if (top + rect.height > viewportHeight) {
+            top = mouseY - rect.height - 15;
+        }
+        
+        // 确保不超出视口
+        left = Math.max(0, left);
+        top = Math.max(0, top);
+        
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+    }
+    
+    // 获取物品详情
+    getItemDetails(item) {
+        const qualityName = Utils.getQualityName(item.quality || 0);
+        const qualityColorClass = Utils.getQualityColorClass(item.quality || 0);
+        
+        let details = `
+            <h4 class="${qualityColorClass}">${item.name}</h4>
+            <p>${qualityName} ${this.getItemTypeText(item.type)}</p>
+            <p>${item.description}</p>
+        `;
+        
+        // 添加装备属性
+        if (item.type === 'equipment') {
+            if (item.baseStats) {
+                details += '<h5>基础属性：</h5><ul class="item-stats">';
+                for (const [stat, value] of Object.entries(item.baseStats)) {
+                    details += `<li>${this.getStatName(stat)}: +${value}</li>`;
+                }
+                details += '</ul>';
+            }
+            
+            if (item.extraStats) {
+                details += '<h5>额外属性：</h5><ul class="item-stats">';
+                item.extraStats.forEach(stat => {
+                    details += `<li>${this.getStatName(stat.stat)}: +${stat.value}</li>`;
+                });
+                details += '</ul>';
+            }
+            
+            if (item.specialEffect && window.specialEffects) {
+                details += `<h5>特殊效果：</h5><p>${window.specialEffects[item.specialEffect] || item.specialEffect}</p>`;
+            }
+        }
+        
+        // 添加技能书信息
+        if (item.type === 'skillBook') {
+            const skill = Utils.getSkillById(item.skillId);
+            if (skill) {
+                details += `<h5>技能信息：</h5><p>${skill.description}</p>`;
+                if (this.player.skills && this.player.skills.includes(item.skillId)) {
+                    details += '<p style="color: #e74c3c;">已学习此技能</p>';
+                }
+            }
+        }
+        
+        return details;
+    }
+    
+    // 使用物品
+    useItemFromInventory(index) {
+        if (!this.player || index < 0 || index >= this.player.inventory.length) return;
+        
+        const item = this.player.inventory[index];
+        
+        if (item.type === 'skillBook') {
+            // 学习技能
+            this.learnSkillFromBook(item, index);
+        } else if (item.type === 'consumable') {
+            // 使用消耗品
+            this.useConsumable(item, index);
+        }
+    }
+    
+    // 从技能书学习技能
+    learnSkillFromBook(skillBook, index) {
+        if (!skillBook.skillId) {
+            this.logMessage('无效的技能书！');
+            return;
+        }
+        
+        // 确保玩家有skills数组
+        if (!this.player.skills) {
+            this.player.skills = [];
+        }
+        
+        // 检查是否已学习
+        if (this.player.skills.includes(skillBook.skillId)) {
+            this.logMessage('你已经学习过这个技能了！');
+            return;
+        }
+        
+        // 学习技能
+        this.player.skills.push(skillBook.skillId);
+        
+        // 从背包移除
+        this.player.inventory.splice(index, 1);
+        
+        this.logMessage(`成功学习了技能：${this.getSkillName(skillBook.skillId)}！`);
+        
+        // 更新UI
+        this.updateInventoryDisplay();
+        this.updateSkillsDisplay();
+        this.savePlayerData();
+    }
+    
+    // 使用消耗品
+    useConsumable(consumable, index) {
+        if (consumable.backpackSlotsBonus) {
+            // 处理背包扩展物品
+            this.expandBackpack(consumable.backpackSlotsBonus, index);
+        } else {
+            // 处理普通消耗品
+            // 这里可以根据消耗品类型实现不同的效果
+            // 目前只是一个示例，实际效果需要根据游戏设计来实现
+            
+            this.logMessage(`使用了${consumable.name}！`);
+            
+            // 从背包移除
+            this.player.inventory.splice(index, 1);
+            
+            // 更新UI
+            this.updateInventoryDisplay();
+            this.savePlayerData();
+        }
+    }
+    
+    // 扩展背包
+    expandBackpack(slotsBonus, index) {
+        if (!this.player) return;
+        
+        // 确保玩家有backpackSlots属性
+        if (!this.player.backpackSlots) {
+            this.player.backpackSlots = 24; // 初始24格
+        }
+        
+        // 增加背包格子数
+        this.player.backpackSlots += slotsBonus;
+        
+        const item = this.player.inventory[index];
+        this.logMessage(`使用了${item.name}！背包容量增加了${slotsBonus}格！`);
+        
+        // 从背包移除
+        this.player.inventory.splice(index, 1);
+        
+        // 更新UI
+        this.updateInventoryDisplay();
+        this.savePlayerData();
+    }
+    
+    // 丢弃物品
+    dropItemFromInventory(index) {
+        if (!this.player || index < 0 || index >= this.player.inventory.length) return;
+        
+        const item = this.player.inventory[index];
+        
+        // 从背包移除
+        this.player.inventory.splice(index, 1);
+        
+        this.logMessage(`丢弃了${item.name}！`);
+        
+        // 更新UI
+        this.updateInventoryDisplay();
+        this.savePlayerData();
     }
     
     // 从背包装备物品

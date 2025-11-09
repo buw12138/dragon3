@@ -10,6 +10,9 @@ const items = [
         type: 'equipment',
         slot: 'mainHand',
         quality: 0, // 白色品质
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             attack: 5
         },
@@ -21,6 +24,9 @@ const items = [
         type: 'equipment',
         slot: 'chest',
         quality: 0,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             defense: 3,
             hp: 10
@@ -33,6 +39,9 @@ const items = [
         type: 'equipment',
         slot: 'boots',
         quality: 0,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             speed: 0.05
         },
@@ -46,6 +55,9 @@ const items = [
         type: 'equipment',
         slot: 'mainHand',
         quality: 1,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             attack: 12
         },
@@ -60,6 +72,9 @@ const items = [
         type: 'equipment',
         slot: 'offHand',
         quality: 1,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             defense: 8,
             blockRate: 0.05
@@ -72,6 +87,9 @@ const items = [
         type: 'equipment',
         slot: 'helmet',
         quality: 1,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             magic: 8,
             intelligence: 2
@@ -86,6 +104,9 @@ const items = [
         type: 'equipment',
         slot: 'mainHand',
         quality: 2,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             attack: 20
         },
@@ -102,6 +123,9 @@ const items = [
         type: 'equipment',
         slot: 'chest',
         quality: 2,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             defense: 15,
             hp: 50
@@ -117,6 +141,9 @@ const items = [
         type: 'equipment',
         slot: 'boots',
         quality: 2,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             speed: 0.2,
             dodgeRate: 0.05
@@ -131,6 +158,9 @@ const items = [
         type: 'equipment',
         slot: 'mainHand',
         quality: 3,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             attack: 35
         },
@@ -148,6 +178,9 @@ const items = [
         type: 'equipment',
         slot: 'offHand',
         quality: 3,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             defense: 25,
             blockRate: 0.15,
@@ -162,6 +195,9 @@ const items = [
         type: 'equipment',
         slot: 'helmet',
         quality: 3,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             magic: 30,
             intelligence: 10
@@ -179,6 +215,9 @@ const items = [
         type: 'equipment',
         slot: 'mainHand',
         quality: 4,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             attack: 60
         },
@@ -197,6 +236,9 @@ const items = [
         type: 'equipment',
         slot: 'chest',
         quality: 4,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             defense: 50,
             hp: 200,
@@ -216,6 +258,9 @@ const items = [
         type: 'equipment',
         slot: 'accessory1',
         quality: 4,
+        canEquip: true,
+        canUse: false,
+        canDrop: true,
         baseStats: {
             speed: 0.5,
             dodgeRate: 0.2
@@ -235,6 +280,9 @@ const items = [
         type: 'skillBook',
         skillId: 'slash',
         quality: 1,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
         description: '学习主动技能：横扫千军'
     },
     {
@@ -243,6 +291,9 @@ const items = [
         type: 'skillBook',
         skillId: 'fireball',
         quality: 1,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
         description: '学习主动技能：火球术'
     },
     {
@@ -251,6 +302,9 @@ const items = [
         type: 'skillBook',
         skillId: 'heal',
         quality: 1,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
         description: '学习主动技能：治疗术'
     },
     {
@@ -259,6 +313,9 @@ const items = [
         type: 'skillBook',
         skillId: 'critical',
         quality: 1,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
         description: '学习被动技能：致命一击'
     },
     {
@@ -267,7 +324,45 @@ const items = [
         type: 'skillBook',
         skillId: 'shield_master',
         quality: 2,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
         description: '学习被动技能：盾牌大师'
+    },
+    
+    // 背包扩展物品
+    {
+        id: 'small_backpack',
+        name: '小型背包',
+        type: 'consumable',
+        quality: 1,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        description: '增加8个背包格子',
+        backpackSlotsBonus: 8
+    },
+    {
+        id: 'medium_backpack',
+        name: '中型背包',
+        type: 'consumable',
+        quality: 2,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        description: '增加12个背包格子',
+        backpackSlotsBonus: 12
+    },
+    {
+        id: 'large_backpack',
+        name: '大型背包',
+        type: 'consumable',
+        quality: 3,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        description: '增加20个背包格子',
+        backpackSlotsBonus: 20
     }
 ];
 
