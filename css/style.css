@@ -37,6 +37,9 @@ body {
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    min-height: 600px; /* 进一步增加整体界面高度 */
+    display: flex; /* 使用flex布局 */
+    flex-direction: column; /* 垂直方向排列 */
 }
 
 /* 战斗场景 */
@@ -45,10 +48,11 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    min-height: 300px;
+    min-height: 500px; /* 增加战斗场景的最小高度 */
     background-color: rgba(44, 62, 80, 0.5);
     border-radius: 10px;
-    padding: 20px;
+    padding: 30px; /* 增加内边距 */
+    width: 100%; /* 确保宽度充满父容器 */
 }
 
 /* 角色信息面板 */
@@ -122,6 +126,18 @@ body {
     white-space: nowrap;
 }
 
+/* 飘字容器样式 */
+.floating-text-container {
+    position: relative;
+    width: 100%;
+    height: 40px; /* 给飘字留出足够的空间 */
+    margin-top: 20px;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
 
 
 .character-stats {
@@ -170,7 +186,7 @@ body {
 
 /* 伤害/治疗飘字样式 */
 .damage-number {
-    position: absolute;
+    position: relative;
     font-size: 18px;
     font-weight: bold;
     pointer-events: none;
@@ -208,11 +224,11 @@ body {
 /* 战斗日志 */
 .battle-log {
     width: 100%;
-    max-width: 300px;
-    height: 200px;
+    max-width: 400px; /* 增加最大宽度 */
+    height: 500px; /* 增加高度以显示更多信息 */
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 10px;
-    padding: 10px;
+    padding: 15px;
     overflow-y: auto;
     font-size: 0.9em;
     margin: 0 20px;
@@ -227,7 +243,9 @@ body {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: auto; /* 自动顶到底部 */
+    margin-bottom: 10px;
+    padding-top: 20px;
     flex-wrap: wrap;
 }
 

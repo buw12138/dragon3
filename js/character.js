@@ -339,36 +339,32 @@ class Character {
     
     // 显示伤害/治疗飘字
     showFloatingText(value, type = 'damage') {
-        // 获取角色对应的DOM元素
-        // 玩家对象使用class Character
-        // 敌人对象是普通对象
-        let characterElement;
+        // 获取专门的飘字容器
+        let floatingContainer;
         
         // 检查name属性来区分玩家和敌人
         if (this.name === '玩家') {
-            characterElement = document.querySelector('.player-sprite');
+            floatingContainer = document.querySelector('.player-floating-container');
         } else {
-            characterElement = document.querySelector('.enemy-sprite');
+            floatingContainer = document.querySelector('.enemy-floating-container');
         }
         
-        if (!characterElement) return;
+        if (!floatingContainer) return;
         
         // 创建飘字元素
         const floatElement = document.createElement('div');
         floatElement.className = `damage-number ${type}`;
         floatElement.textContent = type === 'damage' ? `-${value}` : `+${value}`;
         
-        // 设置位置（在角色头像旁边）
-        const rect = characterElement.getBoundingClientRect();
-        const container = characterElement.parentElement;
-        const containerRect = container.getBoundingClientRect();
+        // 设置飘字样式
+        floatElement.style.position = 'absolute';
+        floatElement.style.bottom = '0';
+        floatElement.style.left = '50%';
+        floatElement.style.transform = 'translateX(-50%)';
+        floatElement.style.margin = '0';
         
-        // 相对于容器定位
-        floatElement.style.left = `${rect.right - containerRect.left + 10}px`;
-        floatElement.style.top = `${rect.top - containerRect.top}px`;
-        
-        // 添加到容器中
-        container.appendChild(floatElement);
+        // 添加到飘字容器中（血条下方）
+        floatingContainer.appendChild(floatElement);
         
         // 动画结束后移除元素
         setTimeout(() => {
@@ -623,27 +619,25 @@ function createEnemy(enemyData) {
         
         // 显示伤害/治疗飘字
         showFloatingText: function(value, type = 'damage') {
-            // 获取敌人对应的DOM元素
-            const characterElement = document.querySelector('.enemy-sprite');
+            // 获取专门的飘字容器
+            const floatingContainer = document.querySelector('.enemy-floating-container');
             
-            if (!characterElement) return;
+            if (!floatingContainer) return;
             
             // 创建飘字元素
             const floatElement = document.createElement('div');
             floatElement.className = `damage-number ${type}`;
             floatElement.textContent = type === 'damage' ? `-${value}` : `+${value}`;
             
-            // 设置位置（在敌人头像旁边）
-            const rect = characterElement.getBoundingClientRect();
-            const container = characterElement.parentElement;
-            const containerRect = container.getBoundingClientRect();
+            // 设置飘字样式
+            floatElement.style.position = 'absolute';
+            floatElement.style.bottom = '0';
+            floatElement.style.left = '50%';
+            floatElement.style.transform = 'translateX(-50%)';
+            floatElement.style.margin = '0';
             
-            // 相对于容器定位
-            floatElement.style.left = `${rect.right - containerRect.left + 10}px`;
-            floatElement.style.top = `${rect.top - containerRect.top}px`;
-            
-            // 添加到容器中
-            container.appendChild(floatElement);
+            // 添加到飘字容器中（血条下方）
+            floatingContainer.appendChild(floatElement);
             
             // 动画结束后移除元素
             setTimeout(() => {
