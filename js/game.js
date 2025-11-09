@@ -18,6 +18,13 @@ class Game {
         // 战斗UI更新循环
         this.battleUIUpdateLoop = null;
         
+        // 事件绑定引用，用于正确移除事件监听器
+        this._boundMouseEnter = null;
+        this._boundMouseLeave = null;
+        this._boundContextMenu = null;
+        this._boundContextMenuItem = null;
+        this._boundHideContextMenu = null;
+        
         // 注意：不再在构造函数中立即调用init()，而是让initGame()函数控制初始化时机
     }
     
@@ -151,6 +158,12 @@ class Game {
         }
         
         // 显示角色面板按钮
+        
+        // 绑定全局点击事件来关闭右键菜单（只绑定一次）
+        if (!this._boundHideContextMenu) {
+            this._boundHideContextMenu = this.hideContextMenu.bind(this);
+            document.addEventListener('click', this._boundHideContextMenu);
+        }
         if (this.ui.characterButton) {
             this.ui.characterButton.addEventListener('click', () => this.showModal('character'));
         }
@@ -749,27 +762,38 @@ class Game {
     bindItemEvents() {
         // 移除现有的事件监听器（避免重复绑定）
         document.querySelectorAll('.inventory-slot').forEach(slot => {
-            slot.removeEventListener('mouseenter', this.handleItemMouseEnter.bind(this));
-            slot.removeEventListener('mouseleave', this.handleItemMouseLeave.bind(this));
-            slot.removeEventListener('contextmenu', this.handleItemContextMenu.bind(this));
+            // 使用命名函数引用以便正确移除
+            slot.removeEventListener('mouseenter', this._boundMouseEnter);
+            slot.removeEventListener('mouseleave', this._boundMouseLeave);
+            slot.removeEventListener('contextmenu', this._boundContextMenu);
+        });
+        
+        // 移除右键菜单事件
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.removeEventListener('click', this._boundContextMenuItem);
         });
         
         // 移除装备按钮，所有装备操作通过右键菜单进行
         
+        // 保存绑定后的函数引用
+        this._boundMouseEnter = this.handleItemMouseEnter.bind(this);
+        this._boundMouseLeave = this.handleItemMouseLeave.bind(this);
+        this._boundContextMenu = this.handleItemContextMenu.bind(this);
+        this._boundContextMenuItem = this.handleContextMenuItem.bind(this);
+        
         // 绑定鼠标悬浮事件
         document.querySelectorAll('.inventory-slot:not(.empty)').forEach(slot => {
-            slot.addEventListener('mouseenter', this.handleItemMouseEnter.bind(this));
-            slot.addEventListener('mouseleave', this.handleItemMouseLeave.bind(this));
-            slot.addEventListener('contextmenu', this.handleItemContextMenu.bind(this));
+            slot.addEventListener('mouseenter', this._boundMouseEnter);
+            slot.addEventListener('mouseleave', this._boundMouseLeave);
+            slot.addEventListener('contextmenu', this._boundContextMenu);
         });
         
         // 绑定右键菜单事件
         document.querySelectorAll('.context-menu-item').forEach(item => {
-            item.addEventListener('click', this.handleContextMenuItem.bind(this));
+            item.addEventListener('click', this._boundContextMenuItem);
         });
         
-        // 点击其他地方关闭右键菜单
-        document.addEventListener('click', this.hideContextMenu.bind(this));
+        // 只绑定一次全局点击事件（在构造函数中完成）
     }
     
     // 处理物品鼠标悬浮进入
@@ -875,12 +899,33 @@ class Game {
         e.stopPropagation();
         
         const menu = document.getElementById('context-menu');
-        const slotIndex = parseInt(menu.getAttribute('data-slot-index'));
+        const slotIndexStr = menu.getAttribute('data-slot-index');
+        const slotIndex = parseInt(slotIndexStr);
         const action = e.target.getAttribute('data-action');
         
+        // 增加严格的参数验证
         if (e.target.classList.contains('disabled')) return;
+        if (isNaN(slotIndex) || typeof slotIndex !== 'number' || slotIndex < 0) {
+            console.warn('无效的物品槽索引:', slotIndexStr);
+            this.hideContextMenu();
+            return;
+        }
+        
+        // 验证玩家数据和背包索引
+        if (!this.player || !this.player.inventory || slotIndex >= this.player.inventory.length) {
+            console.warn('玩家数据无效或物品槽索引超出范围');
+            this.hideContextMenu();
+            return;
+        }
         
         const item = this.player.inventory[slotIndex];
+        
+        // 验证物品存在
+        if (!item) {
+            console.warn('物品槽为空');
+            this.hideContextMenu();
+            return;
+        }
         
         switch (action) {
             case 'equip':
@@ -1007,23 +1052,42 @@ class Game {
     
     // 使用物品
     useItemFromInventory(index) {
-        if (!this.player || index < 0 || index >= this.player.inventory.length) return;
+        // 增加严格的参数检查
+        if (typeof index !== 'number' || index < 0 || !this.player || !this.player.inventory || index >= this.player.inventory.length) {
+            console.warn('无效的物品索引或玩家数据');
+            return;
+        }
         
         const item = this.player.inventory[index];
         
-        if (item.type === 'skillBook') {
+        // 确保物品对象存在且有type属性
+        if (!item || typeof item !== 'object' || !item.type) {
+            console.warn('无效的物品数据');
+            return;
+        }
+        
+        // 使用String()进行类型转换，确保严格比较
+        if (String(item.type) === 'skillBook') {
+            console.log('使用技能书:', item.name);
             // 学习技能
             this.learnSkillFromBook(item, index);
-        } else if (item.type === 'consumable') {
+        } else if (String(item.type) === 'consumable') {
+            console.log('使用消耗品:', item.name);
             // 使用消耗品
             this.useConsumable(item, index);
+        } else {
+            // 对于其他类型的物品，提供明确的提示
+            console.log('尝试使用不可直接使用的物品:', item.type);
+            this.logMessage('这个物品不能直接使用！');
         }
     }
     
     // 从技能书学习技能
     learnSkillFromBook(skillBook, index) {
-        if (!skillBook.skillId) {
-            this.logMessage('无效的技能书！');
+        // 增加防御性检查，确保传入的是真正的技能书
+        if (!skillBook || typeof skillBook !== 'object' || !skillBook.skillId) {
+            console.warn('无效的技能书数据', skillBook);
+            this.logMessage('这不是有效的技能书！');
             return;
         }
         
@@ -1034,6 +1098,7 @@ class Game {
         
         // 检查是否已学习
         if (this.player.learnedSkills.includes(skillBook.skillId)) {
+            console.log('玩家已经学习过此技能:', skillBook.skillId);
             this.logMessage('你已经学习过这个技能了！');
             return;
         }
@@ -1054,8 +1119,11 @@ class Game {
         } else {
             // 获取技能信息来显示具体的失败原因
             const skill = Utils.getSkillById(skillBook.skillId);
-            if (skill && skill.requirements) {
+            // 确保只在真正尝试学习技能书时显示弹窗
+            if (skill && skill.requirements && String(skillBook.type) === 'skillBook') {
+                console.log('学习技能失败，不满足要求:', skillBook.skillId);
                 this.logMessage('你不满足学习这个技能的条件！');
+                // 恢复弹窗功能，但增加类型验证确保只在正确情况下显示
                 alert('你不满足学习这个技能的条件！');
             } else {
                 this.logMessage('无法学习这个技能！');
