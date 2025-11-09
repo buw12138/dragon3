@@ -524,7 +524,8 @@ class Character {
     
     // 准备战斗（重置战斗状态）
     prepareForBattle() {
-        this.currentHp = this.combatStats.hp;
+        // 移除血量自动恢复，保留当前血量
+        // this.currentHp = this.combatStats.hp;
         this.currentMp = this.combatStats.magic * 5; // 魔力上限
 
         this.isAlive = true;

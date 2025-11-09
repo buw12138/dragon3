@@ -517,7 +517,7 @@ class Game {
         combatStatsHTML += '<tr><td>攻速：</td><td>' + combatStats.speed.toFixed(2) + '</td></tr>';
         combatStatsHTML += '<tr><td>暴击率：</td><td>' + Utils.formatCombatStat('critRate', combatStats.critRate) + '</td></tr>';
         combatStatsHTML += '<tr><td>暴击伤害：</td><td>+' + Utils.formatCombatStat('critDamage', combatStats.critDamage - 1) + '</td></tr>';
-        combatStatsHTML += '<tr><td>生命值：</td><td>' + Math.floor(combatStats.hp) + '</td></tr>';
+        combatStatsHTML += '<tr><td>生命值：</td><td>' + Math.floor(this.player.currentHp) + '/' + Math.floor(combatStats.hp) + '</td></tr>';
         combatStatsHTML += '<tr><td>防御：</td><td>' + Math.floor(combatStats.defense) + '</td></tr>';
         combatStatsHTML += '<tr><td>闪避率：</td><td>' + Utils.formatCombatStat('dodgeRate', combatStats.dodgeRate) + '</td></tr>';
         combatStatsHTML += '<tr><td>格挡率：</td><td>' + Utils.formatCombatStat('blockRate', combatStats.blockRate) + '</td></tr>';
@@ -1070,16 +1070,64 @@ class Game {
             this.expandBackpack(consumable.backpackSlotsBonus, index);
         } else {
             // 处理普通消耗品
-            // 这里可以根据消耗品类型实现不同的效果
-            // 目前只是一个示例，实际效果需要根据游戏设计来实现
+            let effectApplied = false;
             
-            this.logMessage(`使用了${consumable.name}！`);
+            // 处理恢复血量的药水
+            if (consumable.healAmount && typeof consumable.healAmount === 'number') {
+                const healAmount = consumable.healAmount;
+                const actualHeal = this.player.heal(healAmount);
+                this.logMessage(`使用了${consumable.name}，恢复了${actualHeal}点生命值！`);
+                effectApplied = true;
+            }
+            
+            // 如果没有特定效果，显示通用消息
+            if (!effectApplied) {
+                this.logMessage(`使用了${consumable.name}，但没有产生效果！`);
+                console.warn('消耗品没有产生效果:', consumable.name);
+            }
             
             // 从背包移除
             this.player.inventory.splice(index, 1);
             
-            // 更新UI
+            // 立即更新UI，确保在非战斗状态下也能显示血量变化
             this.updateInventoryDisplay();
+            
+            this.updateCharacterPanel();
+            
+            // 重点：更新玩家面板上的生命值显示（这是在战斗外显示的主要位置）
+            if (this.ui.playerPanel && this.player && this.player.combatStats) {
+                // 更新生命值文本
+                const playerHpText = this.ui.playerPanel.querySelector('.hp-text');
+                if (playerHpText) {
+                    playerHpText.textContent = Math.floor(this.player.currentHp) + '/' + Math.floor(this.player.combatStats.hp);
+                } else {
+                    console.warn('未找到玩家面板HP文本元素');
+                }
+                
+                // 更新生命值条
+                const playerHpBar = this.ui.playerPanel.querySelector('.hp-bar-fill');
+                if (playerHpBar) {
+                    const hpPercentage = (this.player.currentHp / this.player.combatStats.hp) * 100;
+                    playerHpBar.style.width = hpPercentage + '%';
+                } else {
+                    console.warn('未找到玩家面板HP条元素');
+                }
+            } else {
+                console.warn('玩家面板或玩家数据不存在');
+            }
+            
+            // 直接检查并更新角色面板中的生命值显示元素（作为额外保障）
+            if (this.ui.characterCombatStats) {
+                const combatStats = this.player.combatStats;
+                const hpRow = this.ui.characterCombatStats.querySelector('tr:nth-child(6) td:last-child');
+                if (hpRow) {
+                    hpRow.textContent = Math.floor(this.player.currentHp) + '/' + Math.floor(combatStats.hp);
+                }
+            }
+            
+            // 强制浏览器重排重绘，确保UI立即更新
+            void document.body.offsetHeight; // 触发重排
+            
             this.savePlayerData();
         }
     }

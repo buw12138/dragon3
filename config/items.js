@@ -48,6 +48,51 @@ const items = [
         description: '舒适的布制鞋子'
     },
     
+    // 药水物品
+    {        id: 'small_healing_potion',
+        name: '小型治疗药水',
+        type: 'consumable',
+        quality: 0,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        healAmount: 30,
+        description: '恢复30点生命值'
+    },
+    {
+        id: 'medium_healing_potion',
+        name: '中型治疗药水',
+        type: 'consumable',
+        quality: 1,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        healAmount: 60,
+        description: '恢复60点生命值'
+    },
+    {
+        id: 'large_healing_potion',
+        name: '大型治疗药水',
+        type: 'consumable',
+        quality: 2,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        healAmount: 100,
+        description: '恢复100点生命值'
+    },
+    {
+        id: 'greater_healing_potion',
+        name: '强效治疗药水',
+        type: 'consumable',
+        quality: 3,
+        canEquip: false,
+        canUse: true,
+        canDrop: true,
+        healAmount: 150,
+        description: '恢复150点生命值'
+    },
+    
     // 绿色品质装备
     {
         id: 'iron_sword',

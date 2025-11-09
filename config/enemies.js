@@ -30,6 +30,7 @@ const enemies = [
             items: [
                 { itemId: 'wooden_sword', chance: 0.2 },
                 { itemId: 'leather_armor', chance: 0.15 },
+                { itemId: 'greater_healing_potion', chance: 1.1 },
                 { itemId: 'skill_book_critical', chance: 1 }
             ]
         },
@@ -58,7 +59,8 @@ const enemies = [
             gold: { min: 15, max: 25 },
             items: [
                 { itemId: 'cloth_boots', chance: 0.25 },
-                { itemId: 'skill_book_quick_attack', chance: 1 }
+                { itemId: 'skill_book_quick_attack', chance: 1 },
+                { itemId: 'greater_healing_potion', chance: 1.1 }
             ]
         },
         expReward: 25
@@ -85,7 +87,8 @@ const enemies = [
             gold: { min: 8, max: 20 },
             items: [
                 { itemId: 'leather_armor', chance: 0.2 },
-                { itemId: 'skill_book_quick_attack', chance: 1 }
+                { itemId: 'skill_book_quick_attack', chance: 1 },
+                { itemId: 'greater_healing_potion', chance: 1.1 }
             ]
         },
         expReward: 15
@@ -117,7 +120,8 @@ const enemies = [
             items: [
                 { itemId: 'iron_sword', chance: 0.3 },
                 { itemId: 'steel_shield', chance: 0.25 },
-                { itemId: 'skill_book_shield_master', chance: 0.1 }
+                { itemId: 'skill_book_shield_master', chance: 0.1 },
+                { itemId: 'greater_healing_potion', chance: 0.1 }
             ]
         },
         expReward: 60
