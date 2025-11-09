@@ -486,6 +486,11 @@ body {
 .quality-purple { color: #9C27B0; }
 .quality-orange { color: #FF9800; }
 
+/* 技能相关颜色 */
+.skill-red { color: #ff0000; }
+.skill-red-border { border: 2px solid #ff0000; }
+.inventory-slot.skill-red-border:hover { background-color: rgba(255, 0, 0, 0.1); }
+
 /* 技能装配样式 */
 .memory-section {
     margin-bottom: 20px;
@@ -849,6 +854,17 @@ body {
     border-color: #f39c12;
 }
 
+/* 技能书格子红色边框 */
+.inventory-slot.skill-red-border {
+    border-color: #ff0000;
+}
+
+/* 技能书格子红色边框悬停效果 */
+.inventory-slot.skill-red-border:hover {
+    border-color: #ff0000;
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
 .inventory-item {
     width: 100%;
     height: 100%;
@@ -921,6 +937,32 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     pointer-events: none;
     display: none;
+}
+
+/* 技能书悬浮窗样式 - 红色边框 */
+.item-tooltip.skill-red {
+    border: 2px solid #ff0000;
+}
+
+/* 物品悬浮窗品质边框颜色 */
+.item-tooltip.quality-0 {
+    border: 2px solid #ffffff; /* 白色 */
+}
+
+.item-tooltip.quality-1 {
+    border: 2px solid #2ecc71; /* 绿色 */
+}
+
+.item-tooltip.quality-2 {
+    border: 2px solid #3498db; /* 蓝色 */
+}
+
+.item-tooltip.quality-3 {
+    border: 2px solid #9b59b6; /* 紫色 */
+}
+
+.item-tooltip.quality-4 {
+    border: 2px solid #f39c12; /* 橙色 */
 }
 
 .item-tooltip h4 {

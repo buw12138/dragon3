@@ -361,6 +361,11 @@ class BattleManager {
         // 调用技能的效果函数（使用正确的函数名effect）
         const effectResult = skill.effect(caster, target);
         
+        // 如果技能返回了消息，则添加到战斗日志
+        if (effectResult && effectResult.message) {
+            this.addBattleLog(effectResult.message);
+        }
+        
         // 如果技能造成了伤害，添加受击震动效果
         if (effectResult && (effectResult.damage || effectResult.actualDamage) && 
             (effectResult.damage || effectResult.actualDamage) > 0) {
@@ -459,6 +464,8 @@ class BattleManager {
                         this.player.inventory.push(skillBook);
                         this.addBattleLog(`获得了技能书：${skillBook.name}`);
                     }
+                    // 将技能书也添加到items数组，以便在战斗胜利面板中显示
+                    rewards.items.push(skillBook);
                 }
             }
         } else {
@@ -469,8 +476,7 @@ class BattleManager {
         if (this.onBattleEnd) {
             this.onBattleEnd(playerWon, {
                 items: playerWon ? rewards.items : [],
-                // 不再传递skills数组，因为技能书已经添加到items中
-                skills: []
+                skills: playerWon ? rewards.skills : []
             });
         }
     }

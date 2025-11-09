@@ -357,9 +357,10 @@ class Game {
                     if (rewards.items && rewards.items.length > 0) {
                         rewardsHTML += '<h4>战利品：</h4><ul>';
                         for (const item of rewards.items) {
-                            const qualityColorClass = Utils.getQualityColorClass(item.quality);
+                            // 对于技能书类型的物品，使用红色而不是品质颜色
+                            const colorClass = item.type === 'skillBook' ? 'skill-red' : Utils.getQualityColorClass(item.quality);
                             // 使用类名而不是直接的颜色值
-                            rewardsHTML += '<li class="' + qualityColorClass + '">' + item.name + '</li>';
+                            rewardsHTML += '<li class="' + colorClass + '">' + item.name + '</li>';
                         }
                         rewardsHTML += '</ul>';
                     }
@@ -644,23 +645,33 @@ class Game {
                 // 物品格子
                 const item = this.player.inventory[i];
                 const quality = item.quality || 0;
-                const qualityColorClass = Utils.getQualityColorClass(quality);
+                // 对于技能书类型的物品，使用红色而不是品质颜色
+                let qualityColorClass;
+                let slotClass;
+                
+                if (item.type === 'skillBook') {
+                    qualityColorClass = 'skill-red';
+                    slotClass = 'skill-red-border';
+                } else {
+                    qualityColorClass = Utils.getQualityColorClass(quality);
+                    slotClass = `quality-${quality}`;
+                }
                 
                 // 根据物品类型选择图标
                 let itemIcon = '?';
                 if (item.type === 'equipment') {
                     itemIcon = this.getEquipmentIcon(item.slot);
                 } else if (item.type === 'consumable') {
-                    itemIcon = 'P';
+                    itemIcon = '🧪'; // 药水瓶图标
                 } else if (item.type === 'skillBook') {
-                    itemIcon = 'B';
+                    itemIcon = '📚'; // 书本图标
                 }
                 
                 // 截断物品名称
                 const truncatedName = this.truncateText(item.name, 8);
                 
                 slotHTML = `
-                    <div class="inventory-slot quality-${quality}" data-slot="${i}" data-item-id="${item.id}">
+                    <div class="inventory-slot ${slotClass}" data-slot="${i}" data-item-id="${item.id}">
                         <div class="inventory-item">
                             <div class="item-icon">${itemIcon}</div>
                             <div class="item-name ${qualityColorClass}">${truncatedName}</div>
@@ -756,6 +767,26 @@ class Game {
         
         const item = this.player.inventory[slotIndex];
         const tooltip = document.getElementById('item-tooltip');
+        
+        // 清除所有品质和类型相关的类
+        tooltip.className = 'item-tooltip';
+        
+        // 对于技能书，添加skill-red类以显示红色边框
+        if (item.type === 'skillBook') {
+            tooltip.classList.add('skill-red');
+        } else {
+            // 对于其他物品，根据品质设置对应的颜色边框
+            const quality = item.quality || 0;
+            // 根据品质获取对应的CSS类名
+            switch(quality) {
+                case 0: tooltip.classList.add('quality-0'); break;
+                case 1: tooltip.classList.add('quality-1'); break;
+                case 2: tooltip.classList.add('quality-2'); break;
+                case 3: tooltip.classList.add('quality-3'); break;
+                case 4: tooltip.classList.add('quality-4'); break;
+                default: tooltip.classList.add('quality-0'); // 默认白色
+            }
+        }
         
         // 生成物品详情
         tooltip.innerHTML = this.getItemDetails(item);
@@ -893,7 +924,8 @@ class Game {
     // 获取物品详情
     getItemDetails(item) {
         const qualityName = Utils.getQualityName(item.quality || 0);
-        const qualityColorClass = Utils.getQualityColorClass(item.quality || 0);
+        // 对于技能书类型的物品，使用红色而不是品质颜色
+        const qualityColorClass = item.type === 'skillBook' ? 'skill-red' : Utils.getQualityColorClass(item.quality || 0);
         
         let details = `
             <h4 class="${qualityColorClass}">${item.name}</h4>
@@ -1488,4 +1520,129 @@ function initGame() {
 // 导出初始化函数
 if (typeof window !== 'undefined') {
     window.initGame = initGame;
+    
+    // 预设物品配置（简化版，直接包含常用物品）从控制台直接添加物品时使用
+    const defaultItems = [
+        {
+            id: 'wooden_sword',
+            name: '木剑',
+            type: 'equipment',
+            slot: 'mainHand',
+            quality: 0,
+            canEquip: true,
+            canUse: false,
+            canDrop: true,
+            baseStats: { attack: 5 },
+            description: '一把简单的木剑，攻击力较低'
+        },
+        {
+            id: 'iron_sword',
+            name: '铁剑',
+            type: 'equipment',
+            slot: 'mainHand',
+            quality: 1,
+            canEquip: true,
+            canUse: false,
+            canDrop: true,
+            baseStats: { attack: 12 },
+            extraStats: [{ stat: 'critRate', value: 0.02 }],
+            description: '一把坚固的铁剑'
+        },
+        {
+            id: 'thunder_blade',
+            name: '雷霆之刃',
+            type: 'equipment',
+            slot: 'mainHand',
+            quality: 3,
+            canEquip: true,
+            canUse: false,
+            canDrop: true,
+            baseStats: { attack: 35 },
+            extraStats: [
+                { stat: 'attack', value: 10 },
+                { stat: 'critRate', value: 0.08 },
+                { stat: 'speed', value: 0.1 }
+            ],
+            specialEffect: 'thunder_damage',
+            description: '蕴含雷电之力的强大武器'
+        },
+        {
+            id: 'skill_book_fireball',
+            name: '技能书：火球术',
+            type: 'skillBook',
+            skillId: 'fireball',
+            quality: 1,
+            canEquip: false,
+            canUse: true,
+            canDrop: true,
+            description: '学习主动技能：火球术'
+        },
+        {
+            id: 'skill_book_heal',
+            name: '技能书：治疗术',
+            type: 'skillBook',
+            skillId: 'heal',
+            quality: 1,
+            canEquip: false,
+            canUse: true,
+            canDrop: true,
+            description: '学习主动技能：治疗术'
+        },
+        {
+            id: 'small_backpack',
+            name: '小型背包',
+            type: 'consumable',
+            quality: 1,
+            canEquip: false,
+            canUse: true,
+            canDrop: true,
+            description: '增加8个背包格子',
+            backpackSlotsBonus: 8
+        }
+    ];
+    
+    // 控制台方法：添加物品到背包
+    window.addItemToInventory = function(itemId) {
+        if (!window.game || !window.game.player) {
+            console.error('游戏未初始化或玩家数据不存在');
+            return false;
+        }
+        
+        // 首先尝试从预设物品中查找
+        let item = defaultItems.find(i => i.id === itemId);
+        
+        // 如果预设中没有，尝试直接从config/items.js中查找
+        if (!item && typeof window.gameConfig === 'object' && window.gameConfig.items) {
+            item = window.gameConfig.items.find(i => i.id === itemId);
+        }
+        
+        if (!item) {
+            console.error('物品不存在:', itemId);
+            console.log('可用物品ID列表:');
+            defaultItems.forEach(i => console.log(`- ${i.id}: ${i.name}`));
+            return false;
+        }
+        
+        // 复制物品配置到背包
+        const newItem = JSON.parse(JSON.stringify(item));
+        window.game.player.inventory.push(newItem);
+        
+        // 更新背包显示
+        window.game.updateInventoryDisplay();
+        // 保存玩家数据
+        window.game.savePlayerData();
+        // 显示背包界面
+        window.game.showModal('inventory-modal');
+        
+        console.log('已添加物品到背包:', newItem.name);
+        return true;
+    };
+    
+    // 控制台方法：显示可用物品列表
+    window.listAvailableItems = function() {
+        console.log('=== 可用物品列表 ===');
+        defaultItems.forEach(item => {
+            console.log(`ID: ${item.id}\n名称: ${item.name}\n类型: ${item.type}\n品质: ${item.quality}\n描述: ${item.description}\n`);
+        });
+    };
 }

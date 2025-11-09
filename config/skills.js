@@ -73,7 +73,7 @@ const skills = [
         type: 'active',
         description: '恢复自身最大生命值20%的血量',
         requirements: { intelligence: 10 }, // 需要10点智力
-        effect: (user) => {
+        effect: (user, target) => {
             const healAmount = Math.floor(user.combatStats.hp * 0.2);
             const actualHeal = user.heal(healAmount);
             return { 
