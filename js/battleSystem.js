@@ -83,6 +83,31 @@ class BattleManager {
         }, this.battleSpeed);
     }
     
+    // 应用受击效果
+    applyHitEffect(target) {
+        // 判断目标是玩家还是敌人
+        let spriteElement;
+        
+        if (target === this.player) {
+            // 获取玩家精灵元素
+            spriteElement = document.querySelector('.player-sprite');
+        } else if (target === this.enemy) {
+            // 获取敌人精灵元素
+            spriteElement = document.querySelector('.enemy-sprite');
+        }
+        
+        // 如果找到了精灵元素，添加震动效果
+        if (spriteElement) {
+            // 添加shake类触发动画
+            spriteElement.classList.add('shake');
+            
+            // 动画结束后移除shake类，以便下次可以再次触发
+            setTimeout(() => {
+                spriteElement.classList.remove('shake');
+            }, 300); // 与CSS动画持续时间一致
+        }
+    }
+    
     // 停止战斗循环
     stopBattleLoop() {
         if (this.battleLoopInterval) {
@@ -250,6 +275,11 @@ class BattleManager {
         // 确保actualDamage是有效数字并且是整数
         const displayDamage = isNaN(actualDamage) ? 0 : Math.max(0, Math.floor(actualDamage));
         
+        // 如果造成了伤害，添加受击震动效果
+        if (actualDamage > 0) {
+            this.applyHitEffect(target);
+        }
+        
         // 记录战斗日志
         let message = `${attacker.name}攻击了${target.name}！`;
         if (displayDamage === 0) {
@@ -299,6 +329,12 @@ class BattleManager {
             return false;
         }
         
+        // 检查并获取技能效果函数
+        if (!skill.effect || typeof skill.effect !== 'function') {
+            console.error('技能缺少有效的效果函数:', skill);
+            return false;
+        }
+        
         if (skill.manaCost && !caster.useMana(skill.manaCost)) {
             return false;
         }
@@ -308,6 +344,11 @@ class BattleManager {
         
         // 调用技能的效果函数
         const effectResult = skill.applyEffect(caster, target, this);
+        
+        // 如果技能造成了伤害，添加受击震动效果
+        if (effectResult && effectResult.damage && effectResult.damage > 0) {
+            this.applyHitEffect(target);
+        }
         
         // 处理技能冷却
         if (skill.cooldown) {
@@ -331,6 +372,11 @@ class BattleManager {
                 // 如果技能函数返回了消息，则添加到战斗日志
                 if (result && result.message) {
                     this.addBattleLog(result.message);
+                }
+                
+                // 如果技能造成了伤害，添加受击震动效果
+                if (result && result.actualDamage && result.actualDamage > 0) {
+                    this.applyHitEffect(target);
                 }
             } catch (error) {
                 console.error('Enemy skill error:', error);

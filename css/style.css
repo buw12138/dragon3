@@ -153,6 +153,21 @@ body {
     background-color: #e74c3c;
 }
 
+/* 受击震动动画 */
+@keyframes hitShake {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-5px, 0); }
+    40% { transform: translate(5px, 0); }
+    60% { transform: translate(-5px, 0); }
+    80% { transform: translate(5px, 0); }
+    100% { transform: translate(0, 0); }
+}
+
+/* 震动效果类 */
+.shake {
+    animation: hitShake 0.3s ease-in-out;
+}
+
 /* 战斗日志 */
 .battle-log {
     width: 100%;
