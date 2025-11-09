@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即时战斗小游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 游戏标题 -->
+        <header class="game-header">
+            <h1>即时战斗小游戏</h1>
+        </header>
+
+        <!-- 游戏主界面 -->
+        <main class="game-main">
+            <!-- 战斗场景 -->
+            <div class="battle-scene" id="battle-scene">
+                <!-- 玩家信息面板 -->
+                <div class="player-panel" id="player-panel">
+                    <div class="character-sprite player-sprite"></div>
+                    <div class="character-info">
+                        <h2 class="character-name">玩家</h2>
+                        <h3 class="character-level">等级 1</h3>
+                        <div class="hp-container">
+                            <span class="hp-label">血量</span>
+                            <div class="hp-bar">
+                                <div class="hp-bar-fill"></div>
+                                <span class="hp-text">0/0</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 战斗日志 -->
+                <div class="battle-log" id="battle-log">
+                    <p>游戏已加载，点击「开始战斗」开始冒险！</p>
+                </div>
+
+                <!-- 敌人信息面板 -->
+                <div class="enemy-panel" id="enemy-panel">
+                    <div class="character-sprite enemy-sprite"></div>
+                    <div class="character-info">
+                        <h2 class="character-name">敌人</h2>
+                        <h3 class="character-level">等级 1</h3>
+                        <div class="hp-container">
+                            <span class="hp-label">血量</span>
+                            <div class="hp-bar">
+                                <div class="hp-bar-fill"></div>
+                                <span class="hp-text">0/0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button id="start-battle">开始战斗</button>
+                <button id="flee-battle" disabled>逃跑</button>
+                <button id="show-character">角色面板</button>
+                <button id="show-inventory">背包</button>
+                <button id="show-skills">技能装配</button>
+            </div>
+        </main>
+
+        <!-- 角色面板模态框 -->
+        <div class="modal" id="character-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>角色面板</h2>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <!-- 可用属性点显示 -->
+                    <div id="available-stat-points">可用属性点：0</div>
+                    
+                    <!-- 角色基础属性 -->
+                    <div class="base-stats" id="character-stats">
+                        <!-- 动态生成基础属性 -->
+                    </div>
+                    
+                    <!-- 属性点分配按钮 -->
+                    <div class="stat-allocation">
+                        <h4>分配属性点</h4>
+                        <div class="allocation-buttons">
+                            <button id="allocate-strength">+1 力量</button>
+                            <button id="allocate-agility">+1 敏捷</button>
+                            <button id="allocate-intelligence">+1 智力</button>
+                            <button id="allocate-endurance">+1 耐力</button>
+                        </div>
+                    </div>
+
+                    <!-- 角色战斗属性 -->
+                    <div class="combat-stats" id="character-combat-stats">
+                        <!-- 动态生成战斗属性 -->
+                    </div>
+                    
+                    <!-- 角色装备 -->
+                    <div class="equipment-section" id="character-equipment">
+                        <!-- 动态生成装备 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 背包模态框 -->
+        <div class="modal" id="inventory-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>背包</h2>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <!-- 物品栏 -->
+                    <div id="inventory-content">
+                        <!-- 物品会在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技能装配模态框 -->
+        <div class="modal" id="skills-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>技能装配</h2>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <!-- 技能内容区域 -->
+                    <div id="skills-content">
+                        <!-- 内容会在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 战斗结束模态框 -->
+        <div class="modal" id="battle-end-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>战斗结果</h2>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="battle-result">战斗胜利！</div>
+                    <div id="battle-rewards">
+                        <!-- 奖励会在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏主脚本入口 -->
+    <script src="js/index.js"></script>
+</body>
+</html>

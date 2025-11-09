@@ -1,0 +1,762 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    overflow-x: hidden;
+}
+
+/* 游戏容器 */
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 游戏标题 */
+.game-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.game-header h1 {
+    font-size: 2.5em;
+    color: #e74c3c;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 游戏主界面 */
+.game-main {
+    background-color: rgba(52, 73, 94, 0.8);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* 战斗场景 */
+.battle-scene {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    min-height: 300px;
+    background-color: rgba(44, 62, 80, 0.5);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+/* 角色信息面板 */
+.player-panel, .enemy-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: rgba(40, 40, 40, 0.8);
+    border-radius: 10px;
+    padding: 15px;
+    width: 240px;
+    color: #fff;
+}
+
+.character-info h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.character-info h3 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    color: #999;
+    text-align: center;
+}
+
+.hp-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.hp-label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    margin-right: 5px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.hp-bar {
+    flex: 1 1 100%;
+    height: 25px;
+    background-color: #4CAF50;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.hp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    white-space: nowrap;
+}
+
+
+
+.character-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    font-size: 0.9em;
+    width: 100%;
+}
+
+.character-stats span {
+    display: block;
+    text-align: center;
+}
+
+/* 角色精灵 */
+.character-sprite {
+    width: 80px;
+    height: 80px;
+    background-color: #3498db;
+    border-radius: 5px;
+    margin: 0 auto 15px auto;
+    background-image: url('../assets/placeholder.svg');
+    background-size: cover;
+    background-position: center;
+}
+
+.enemy-sprite {
+    background-color: #e74c3c;
+}
+
+/* 战斗日志 */
+.battle-log {
+    width: 100%;
+    max-width: 300px;
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 0.9em;
+    margin: 0 20px;
+}
+
+.battle-log p {
+    margin-bottom: 5px;
+}
+
+/* 控制按钮 */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.controls button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.controls button:hover:not(:disabled) {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.controls button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.controls button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#flee-battle {
+    background-color: #f44336;
+}
+
+#flee-battle:hover:not(:disabled) {
+    background-color: #d32f2f;
+}
+
+#show-character, #show-inventory, #show-skills {
+    background-color: #2196F3;
+}
+
+#show-character:hover:not(:disabled),
+#show-inventory:hover:not(:disabled),
+#show-skills:hover:not(:disabled) {
+    background-color: #1976D2;
+}
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #2a2a2a;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    background-color: #333;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #e74c3c;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-modal:hover {
+    color: #ff6b6b;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* 角色面板样式 */
+#available-stat-points {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.base-stats, .combat-stats {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #333;
+    border-radius: 8px;
+}
+
+.base-stats h3, .combat-stats h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
+}
+
+.stat-allocation {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #333;
+    border-radius: 8px;
+}
+
+.stat-allocation h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+}
+
+.allocation-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.allocation-buttons button {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.allocation-buttons button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.allocation-buttons button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+/* 战斗属性格式 */
+.combat-stats .stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #444;
+}
+
+/* 装备系统样式 */
+.equipment-section {
+    margin-top: 20px;
+}
+
+.equipment-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
+}
+
+/* 背包样式 */
+.item-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.item-card {
+    background-color: #333;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.item-card:hover {
+    transform: translateY(-3px);
+    background-color: #404040;
+}
+
+.item-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.item-type {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.item-stats {
+    font-size: 0.8em;
+    color: #999;
+}
+
+/* 装备品质颜色 */
+.quality-white { color: #FFFFFF; }
+.quality-green { color: #4CAF50; }
+.quality-blue { color: #2196F3; }
+.quality-purple { color: #9C27B0; }
+.quality-orange { color: #FF9800; }
+
+/* 技能装配样式 */
+.memory-section {
+    margin-bottom: 20px;
+}
+
+.memory-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+}
+
+.memory-slots {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.memory-slot {
+    background-color: #333;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    min-height: 80px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.memory-slot:hover {
+    background-color: #404040;
+}
+
+.skills-section {
+    margin-top: 20px;
+}
+
+.skills-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+}
+
+.skills-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.skill-card {
+    background-color: #333;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.skill-card:hover {
+    transform: translateY(-2px);
+    background-color: #404040;
+}
+
+.skill-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.skill-type {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.skill-description {
+    font-size: 0.9em;
+    color: #ccc;
+}
+
+/* 战斗结果模态框样式 */
+#battle-result {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4CAF50;
+}
+
+.victory { color: #4CAF50; }
+.defeat { color: #f44336; }
+
+#battle-rewards {
+    padding: 15px;
+    background-color: #333;
+    border-radius: 8px;
+}
+
+.reward-section h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #f0f0f0;
+}
+
+.reward-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #444;
+}
+
+/* 角色面板样式 */
+.base-stats {
+    margin-bottom: 30px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #34495e;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.add-stat {
+    padding: 5px 15px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-stat:hover {
+    background-color: #2ecc71;
+}
+
+.stat-points {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: #f39c12;
+}
+
+.combat-stats {
+    margin-top: 30px;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.stat-grid div {
+    padding: 10px;
+    background-color: #34495e;
+    border-radius: 5px;
+}
+
+/* 装备栏样式 */
+.equipment-section, .items-section {
+    margin-bottom: 30px;
+}
+
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.equipment-slot, .memory-slot {
+    padding: 15px 10px;
+    background-color: #34495e;
+    border-radius: 5px;
+    text-align: center;
+    min-height: 80px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.equipment-slot:hover, .memory-slot:hover {
+    background-color: #3d566e;
+}
+
+/* 物品栏样式 */
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.item {
+    padding: 10px;
+    background-color: #34495e;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.item:hover {
+    transform: scale(1.05);
+}
+
+/* 品质颜色 */
+.quality-white { color: #ffffff; }
+.quality-green { color: #27ae60; }
+.quality-blue { color: #3498db; }
+.quality-purple { color: #9b59b6; }
+.quality-orange { color: #e67e22; }
+
+/* 技能样式 */
+.memory-slots, .learned-skills {
+    margin-bottom: 30px;
+}
+
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.skills-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.skill {
+    padding: 15px;
+    background-color: #34495e;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.skill:hover {
+    background-color: #3d566e;
+}
+
+.skill.active {
+    background-color: #27ae60;
+}
+
+.skill-passive {
+    border-left: 4px solid #f39c12;
+}
+
+.skill-active {
+    border-left: 4px solid #3498db;
+}
+
+/* 战斗结果模态框 */
+#result-message {
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #27ae60;
+}
+
+#reward-section {
+    margin-top: 20px;
+}
+
+#rewards-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.reward-item {
+    padding: 10px;
+    background-color: #34495e;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#continue-button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 30px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+}
+
+#continue-button:hover {
+    background-color: #2980b9;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .battle-scene {
+        flex-direction: column;
+        min-height: auto;
+    }
+    
+    .player-panel, .enemy-panel {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .battle-log {
+        max-width: 100%;
+        margin: 20px 0;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #34495e;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #7f8c8d;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+}
