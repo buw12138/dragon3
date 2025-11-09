@@ -208,18 +208,14 @@ class BattleManager {
         
         // 只有在延迟时间过后才执行攻击逻辑
         if (battleActiveTime >= this.battleStartDelay) {
-            // 玩家攻击
-            if (this.player && this.player.isAlive) {
-                if (this.player.canPerformAttack()) {
-                    this.playerAttack();
-                }
+            // 玩家攻击 - canPerformAttack方法会自动处理状态效果日志
+            if (this.player && this.player.isAlive && this.player.canPerformAttack()) {
+                this.playerAttack();
             }
             
-            // 敌人攻击
-            if (this.enemy && this.enemy.isAlive) {
-                if (this.enemy.canPerformAttack()) {
-                    this.enemyAttack();
-                }
+            // 敌人攻击 - canPerformAttack方法会自动处理状态效果日志
+            if (this.enemy && this.enemy.isAlive && this.enemy.canPerformAttack()) {
+                this.enemyAttack();
             }
         }
     }

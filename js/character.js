@@ -552,17 +552,32 @@ class Character {
     
     // 判断是否可以攻击
     canPerformAttack() {
-        if (!this.isAlive || !this.canAttack) return false;
+        if (!this.isAlive) return false;
         
         // 检查状态效果是否影响攻击
         for (const effect of this.statusEffects) {
-            if (effect.id === 'frozen' || effect.id === 'stunned') {
+            if (effect.id === 'frozen' || effect.id === 'stunned' || effect.id === 'paralyzed') {
+                // 对于麻痹状态，只有随机判定失败时才无法攻击
+                if (effect.id === 'paralyzed' && Math.random() >= 0.5) {
+                    continue;
+                }
+                
+                if (window.battleManager) {
+                    const statusName = effect.id === 'frozen' ? "冰冻" : 
+                                      (effect.id === 'stunned' ? "眩晕" : "麻痹");
+                    // 玩家显示"你"，敌人显示名称
+                    const subject = this.name === '玩家' ? '你' : this.name;
+                    window.battleManager.addBattleLog(`${subject}因${statusName}无法攻击！`);
+                }
                 return false;
             }
-            
-            if (effect.id === 'paralyzed' && Math.random() < 0.5) {
-                return false; // 麻痹状态有50%几率无法攻击
-            }
+        }
+        
+        // 检查canAttack标志（可能是其他原因导致无法攻击）
+        if (!this.canAttack && window.battleManager) {
+            const subject = this.name === '玩家' ? '你' : this.name;
+            window.battleManager.addBattleLog(`${subject}无法攻击！`);
+            return false;
         }
         
         // 检查攻击冷却
@@ -680,7 +695,30 @@ function createEnemy(enemyData) {
         },
         
         canPerformAttack: function() {
-            if (!this.isAlive || !this.canAttack) return false;
+            if (!this.isAlive) return false;
+            
+            // 检查状态效果是否影响攻击
+            for (const effect of this.statusEffects || []) {
+                if (effect.id === 'frozen' || effect.id === 'stunned' || effect.id === 'paralyzed') {
+                    // 对于麻痹状态，只有随机判定失败时才无法攻击
+                    if (effect.id === 'paralyzed' && Math.random() >= 0.5) {
+                        continue;
+                    }
+                    
+                    if (window.battleManager) {
+                        const statusName = effect.id === 'frozen' ? "冰冻" : 
+                                          (effect.id === 'stunned' ? "眩晕" : "麻痹");
+                        window.battleManager.addBattleLog(`${this.name}因${statusName}无法攻击！`);
+                    }
+                    return false;
+                }
+            }
+            
+            // 检查canAttack标志（可能是其他原因导致无法攻击）
+            if (!this.canAttack && window.battleManager) {
+                window.battleManager.addBattleLog(`${this.name}无法攻击！`);
+                return false;
+            }
             
             // 检查攻击冷却
             const attackSpeed = this.baseStats.speed || 1.0;
