@@ -9,7 +9,7 @@ const skills = [
         name: '横扫千军',
         type: 'active',
         description: '对敌人造成150%攻击力的伤害',
-        requirements: {}, // 无特殊要求
+        requirements: {intelligence: 5}, // 智力达到5才能学习
         // 技能效果函数，在战斗系统中调用
         effect: (user, target) => {
             // 计算基础伤害
@@ -72,7 +72,7 @@ const skills = [
         name: '治疗术',
         type: 'active',
         description: '恢复自身最大生命值20%的血量',
-        requirements: { intelligence: 10 }, // 需要10点智力
+        requirements: { intelligence: 5 }, // 需要5点智力
         effect: (user, target) => {
             const healAmount = Math.floor(user.combatStats.hp * 0.2);
             const actualHeal = user.heal(healAmount);
@@ -166,7 +166,7 @@ const skills = [
         name: '致命一击',
         type: 'passive',
         description: '增加10%暴击率和20%暴击伤害',
-        requirements: {},
+        requirements: {intelligence: 15},
         // 被动技能效果在计算战斗属性时应用
         statModifiers: {
             critRate: 0.1,
@@ -178,7 +178,7 @@ const skills = [
         name: '盾牌大师',
         type: 'passive',
         description: '装备盾牌时，格挡率提升15%，格挡值提升30%',
-        requirements: {},
+        requirements: {intelligence: 15},
         // 这个被动效果需要特殊判断是否装备盾牌
         equipmentBasedModifiers: {
             offHand: {

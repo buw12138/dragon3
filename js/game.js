@@ -581,10 +581,24 @@ class Game {
     // 获取属性名称文本
     getStatName(statName) {
         const names = {
+            // 基础属性
             strength: '力量',
             agility: '敏捷',
             intelligence: '智力',
-            stamina: '耐力'
+            stamina: '耐力',
+            // 战斗属性
+            attack: '攻击',
+            magic: '魔法',
+            defense: '防御',
+            hp: '生命',
+            critRate: '暴击',
+            critDamage: '暴伤',
+            dodgeRate: '闪避',
+            blockRate: '格挡',
+            blockValue: '格挡',
+            cdr: '冷却',
+            speed: '攻速',
+            damageVariance: '浮动'
         };
         
         return names[statName] || statName;
@@ -961,6 +975,27 @@ class Game {
             const skill = Utils.getSkillById(item.skillId);
             if (skill) {
                 details += `<h5>技能信息：</h5><p>${skill.description}</p>`;
+                
+                // 添加属性限制条件显示
+                if (skill.requirements && Object.keys(skill.requirements).length > 0) {
+                    details += '<h5>学习要求：</h5><ul class="skill-requirements">';
+                    const hasAllRequirements = Object.entries(skill.requirements).every(([stat, requiredValue]) => {
+                        const currentValue = this.player.baseStats[stat] || 0;
+                        const isMet = currentValue >= requiredValue;
+                        const color = isMet ? '#27ae60' : '#e74c3c'; // 绿色表示满足，红色表示不满足
+                        details += `<li style="color: ${color};">${this.getStatName(stat)}: ${currentValue}/${requiredValue}</li>`;
+                        return isMet;
+                    });
+                    details += '</ul>';
+                    
+                    // 显示是否可以学习
+                    if (hasAllRequirements) {
+                        details += '<p style="color: #27ae60;">✓ 满足学习条件</p>';
+                    } else {
+                        details += '<p style="color: #e74c3c;">✗ 不满足学习条件</p>';
+                    }
+                }
+                
                 if (this.player.skills && this.player.skills.includes(item.skillId)) {
                     details += '<p style="color: #e74c3c;">已学习此技能</p>';
                 }
@@ -1003,18 +1038,29 @@ class Game {
             return;
         }
         
-        // 学习技能
-        this.player.learnedSkills.push(skillBook.skillId);
+        // 使用玩家对象的learnSkill方法，它会自动检查学习条件
+        const success = this.player.learnSkill(skillBook.skillId);
         
-        // 从背包移除
-        this.player.inventory.splice(index, 1);
-        
-        this.logMessage(`成功学习了技能：${this.getSkillName(skillBook.skillId)}！`);
-        
-        // 更新UI
-        this.updateInventoryDisplay();
-        this.updateSkillsDisplay();
-        this.savePlayerData();
+        if (success) {
+            // 从背包移除
+            this.player.inventory.splice(index, 1);
+            
+            this.logMessage(`成功学习了技能：${this.getSkillName(skillBook.skillId)}！`);
+            
+            // 更新UI
+            this.updateInventoryDisplay();
+            this.updateSkillsDisplay();
+            this.savePlayerData();
+        } else {
+            // 获取技能信息来显示具体的失败原因
+            const skill = Utils.getSkillById(skillBook.skillId);
+            if (skill && skill.requirements) {
+                this.logMessage('你不满足学习这个技能的条件！');
+                alert('你不满足学习这个技能的条件！');
+            } else {
+                this.logMessage('无法学习这个技能！');
+            }
+        }
     }
     
     // 使用消耗品
