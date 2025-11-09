@@ -85,7 +85,10 @@ const COMBAT_STATS_FORMULAS = {
 
     
     // 技能冷却缩减 = 基础冷却缩减 + 智力 * 0.1%
-    cdr: (baseCdr, stats) => baseCdr + (stats.intelligence * 0.001)
+    cdr: (baseCdr, stats) => baseCdr + (stats.intelligence * 0.001),
+    
+    // 伤害波动范围 = 基础波动范围 + 智力 * 0.5%
+    damageVariance: (baseDamageVariance, stats) => baseDamageVariance + (stats.intelligence * 0.005)
 };
 
 // 角色初始属性
@@ -110,7 +113,10 @@ const INITIAL_CHARACTER = {
         dodgeRate: 0.01,
         blockRate: 0.01,
         blockValue: 10,
-    
+        
+        // 伤害波动范围（默认±10%）
+        damageVariance: 0.1,
+        
         cdr: 0
     },
     

@@ -275,6 +275,11 @@ class BattleManager {
         let damage = Number(attacker.combatStats?.attack) || Number(attacker.baseStats?.attack) || 10;
         damage = Math.max(1, damage); // 确保伤害至少为1
         
+        // 应用伤害波动范围
+        const damageVariance = Number(attacker.combatStats?.damageVariance) || 0.1;
+        const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
+        damage = damage * varianceMultiplier;
+        
         // 检查暴击
         const critRate = Number(attacker.combatStats?.critRate) || Number(attacker.baseStats?.critRate) || 0;
         const isCritical = Utils.checkCritical(critRate);

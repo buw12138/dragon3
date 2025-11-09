@@ -90,6 +90,9 @@ class Character {
             blockRate: formulas.blockRate ? formulas.blockRate(baseCombatStats.blockRate, baseStats) : 0.01,
             blockValue: formulas.blockValue ? formulas.blockValue(baseCombatStats.blockValue, baseStats) : 10,
             
+            // 伤害波动范围
+            damageVariance: formulas.damageVariance ? formulas.damageVariance(baseCombatStats.damageVariance, baseStats) : 0.1,
+            
             cdr: formulas.cdr ? formulas.cdr(baseCombatStats.cdr, baseStats) : 0
         };
         
@@ -354,13 +357,15 @@ class Character {
         // 创建飘字元素
         const floatElement = document.createElement('div');
         floatElement.className = `damage-number ${type}`;
-        floatElement.textContent = type === 'damage' ? `-${value}` : `+${value}`;
+        // 确保显示整数
+        const displayValue = Math.floor(Math.abs(value));
+        floatElement.textContent = type === 'damage' ? `-${displayValue}` : `+${displayValue}`;
         
         // 设置飘字样式
         floatElement.style.position = 'absolute';
         floatElement.style.bottom = '0';
-        floatElement.style.left = '50%';
-        floatElement.style.transform = 'translateX(-50%)';
+        floatElement.style.left = '40%';
+        floatElement.style.transform = 'translateX(-40%)';
         floatElement.style.margin = '0';
         
         // 添加到飘字容器中（血条下方）
@@ -632,8 +637,8 @@ function createEnemy(enemyData) {
             // 设置飘字样式
             floatElement.style.position = 'absolute';
             floatElement.style.bottom = '0';
-            floatElement.style.left = '50%';
-            floatElement.style.transform = 'translateX(-50%)';
+            floatElement.style.left = '40%';
+            floatElement.style.transform = 'translateX(-40%)';
             floatElement.style.margin = '0';
             
             // 添加到飘字容器中（血条下方）
