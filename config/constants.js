@@ -95,10 +95,10 @@ const COMBAT_STATS_FORMULAS = {
 const INITIAL_CHARACTER = {
     // 基础属性
     baseStats: {
-        strength: 10,
-        agility: 10,
-        intelligence: 10,
-        stamina: 10
+        strength: 0,
+        agility: 0,
+        intelligence: 0,
+        stamina: 0
     },
     
     // 战斗基础值（不计算属性加成）

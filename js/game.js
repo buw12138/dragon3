@@ -129,6 +129,7 @@ class Game {
         allocateStamina: document.getElementById('allocate-stamina'),
             
             // 战斗结果元素
+            battleEndModal: document.getElementById('battle-end-modal'),
             battleResult: document.getElementById('battle-result'),
             battleRewards: document.getElementById('battle-rewards'),
             
@@ -179,6 +180,21 @@ class Game {
         
         if (this.ui.allocateStamina) {
             this.ui.allocateStamina.addEventListener('click', () => this.allocateStatPoint('stamina'));
+        }
+        
+        // 关闭按钮
+        if (this.ui.closeButtons) {
+            this.ui.closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // 隐藏所有模态框
+                    if (this.ui.battleEndModal) {
+                        this.ui.battleEndModal.style.display = 'none';
+                    }
+                    
+                    // 隐藏其他模态框
+                    this.hideAllModals();
+                });
+            });
         }
         
         // 关闭模态框按钮
@@ -341,8 +357,9 @@ class Game {
                     if (rewards.items && rewards.items.length > 0) {
                         rewardsHTML += '<h4>战利品：</h4><ul>';
                         for (const item of rewards.items) {
-                            const qualityColor = Utils.getQualityColor(item.quality);
-                            rewardsHTML += '<li style="color: ' + qualityColor + '">' + item.name + '</li>';
+                            const qualityColorClass = Utils.getQualityColorClass(item.quality);
+                            // 使用类名而不是直接的颜色值
+                            rewardsHTML += '<li class="' + qualityColorClass + '">' + item.name + '</li>';
                         }
                         rewardsHTML += '</ul>';
                     }
@@ -537,10 +554,10 @@ class Game {
                 const item = this.player.equipment[slot];
                 
                 if (item) {
-                    const qualityColor = Utils.getQualityColor(item.quality);
+                    const qualityColorClass = Utils.getQualityColorClass(item.quality);
                     equipmentHTML += '<div class="equipment-slot">';
                     equipmentHTML += '<div class="slot-name">' + name + '</div>';
-                    equipmentHTML += '<div class="slot-item" style="color: ' + qualityColor + '">' + item.name + '</div>';
+                    equipmentHTML += '<div class="slot-item ' + qualityColorClass + '">' + item.name + '</div>';
                     equipmentHTML += '</div>';
                 } else {
                     equipmentHTML += '<div class="equipment-slot">';
@@ -621,10 +638,10 @@ class Game {
         } else {
             for (let i = 0; i < this.player.inventory.length; i++) {
                 const item = this.player.inventory[i];
-                const qualityColor = Utils.getQualityColor(item.quality);
+                const qualityColorClass = Utils.getQualityColorClass(item.quality);
                 
                 inventoryHTML += '<div class="inventory-item">';
-                inventoryHTML += '<div class="item-name" style="color: ' + qualityColor + '">' + item.name + '</div>';
+                inventoryHTML += '<div class="item-name ' + qualityColorClass + '">' + item.name + '</div>';
                 inventoryHTML += '<div class="item-type">' + this.getItemTypeText(item.type) + '</div>';
                 inventoryHTML += '<div class="item-description">' + item.description + '</div>';
                 if (item.type === 'equipment') {

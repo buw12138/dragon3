@@ -12,10 +12,10 @@ class Character {
         
         // 基础属性
         this.baseStats = { 
-            strength: 10,
-            agility: 10,
-            intelligence: 10,
-            stamina: 10,
+            strength: 0,
+            agility: 0,
+            intelligence: 0,
+            stamina: 0,
             ...data.baseStats 
         };
         this.level = data.level || 1;

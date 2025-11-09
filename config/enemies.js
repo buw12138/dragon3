@@ -11,7 +11,7 @@ const enemies = [
         description: '弱小的哥布林，通常群体行动',
         // 基础属性
         baseStats: {
-            hp: 100,
+            hp: 20,
             attack: 15,
             defense: 5,
             speed: 1.0,
@@ -42,7 +42,7 @@ const enemies = [
         level: 1,
         description: '饥饿的野狼，攻击速度快',
         baseStats: {
-            hp: 80,
+            hp: 30,
             attack: 12,
             defense: 3,
             speed: 1.3,
@@ -69,7 +69,7 @@ const enemies = [
         level: 1,
         description: '黏糊糊的史莱姆，攻击力低但生命值较高',
         baseStats: {
-            hp: 150,
+            hp: 50,
             attack: 10,
             defense: 8,
             speed: 0.8,

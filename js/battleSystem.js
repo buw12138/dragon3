@@ -482,17 +482,47 @@ class BattleManager {
         
         // 根据敌人等级和掉落配置生成奖励
         if (enemy.drops) {
-            // 生成装备
-            if (enemy.drops.itemChance && Math.random() < enemy.drops.itemChance) {
-                const item = Utils.generateRandomItem(enemy.level);
+            // 处理敌人特定物品掉落
+            if (enemy.drops.items && enemy.drops.items.length > 0) {
+                for (const dropItem of enemy.drops.items) {
+                    if (Math.random() < dropItem.chance) {
+                        // 从物品库中查找对应ID的物品
+                        const allItems = window.gameItems || [];
+                        const itemTemplate = allItems.find(item => item.id === dropItem.itemId);
+                        
+                        if (itemTemplate) {
+                            // 创建物品实例（深拷贝）
+                            const itemInstance = Utils.deepClone(itemTemplate);
+                            itemInstance.instanceId = Utils.generateUniqueId();
+                            
+                            // 为装备添加随机词条（如果有额外属性配置）
+                            if (itemInstance.type === 'equipment' && itemInstance.quality > 0 && window.itemAffixes) {
+                                this.addRandomAffixes(itemInstance);
+                            }
+                            
+                            // 根据物品类型添加到相应列表
+                            if (itemInstance.type === 'skillBook') {
+                                rewards.skills.push(itemInstance);
+                            } else {
+                                rewards.items.push(itemInstance);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 如果特定掉落没有触发，添加一个基础掉落几率
+            // 基础装备掉落（30%几率）
+            if (rewards.items.length === 0 && Math.random() < 0.3) {
+                const item = Utils.generateRandomItem();
                 if (item) {
                     rewards.items.push(item);
                 }
             }
             
-            // 生成技能书
-            if (enemy.drops.skillChance && Math.random() < enemy.drops.skillChance) {
-                const skillBook = Utils.generateRandomSkillBook(enemy.level);
+            // 基础技能书掉落（10%几率）
+            if (rewards.skills.length === 0 && Math.random() < 0.1) {
+                const skillBook = Utils.generateRandomSkillBook();
                 if (skillBook) {
                     rewards.skills.push(skillBook);
                 }
@@ -500,6 +530,32 @@ class BattleManager {
         }
         
         return rewards;
+    }
+    
+    // 为装备添加随机词条（从utils.js复制逻辑以保持一致性）
+    addRandomAffixes(item) {
+        const affixes = window.itemAffixes || { prefixes: [], suffixes: [] };
+        
+        // 根据品质决定词条数量
+        const affixCount = Math.min(item.quality, 3); // 最多3个词条
+        
+        // 尝试添加前缀
+        const possiblePrefixes = affixes.prefixes.filter(p => p.minQuality <= item.quality);
+        if (possiblePrefixes.length > 0 && Math.random() < 0.7) {
+            const randomPrefix = possiblePrefixes[Math.floor(Math.random() * possiblePrefixes.length)];
+            item.name = randomPrefix.name + ' ' + item.name;
+            
+            if (!item.extraStats) item.extraStats = [];
+            item.extraStats.push({ stat: randomPrefix.stat, value: randomPrefix.value });
+        }
+        
+        // 尝试添加后缀
+        const possibleSuffixes = affixes.suffixes.filter(s => s.minQuality <= item.quality);
+        if (possibleSuffixes.length > 0 && Math.random() < 0.6) {
+            const randomSuffix = possibleSuffixes[Math.floor(Math.random() * possibleSuffixes.length)];
+            item.name = item.name + ' of ' + randomSuffix.name;
+            item.specialEffect = randomSuffix.effect;
+        }
     }
     
     // 添加战斗日志
