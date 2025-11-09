@@ -123,10 +123,10 @@ class Game {
             statPointsDisplay: document.getElementById('available-stat-points'),
             
             // 属性分配按钮
-            allocateStrength: document.getElementById('allocate-strength'),
-            allocateAgility: document.getElementById('allocate-agility'),
-            allocateIntelligence: document.getElementById('allocate-intelligence'),
-            allocateEndurance: document.getElementById('allocate-endurance'),
+        allocateStrength: document.getElementById('allocate-strength'),
+        allocateAgility: document.getElementById('allocate-agility'),
+        allocateIntelligence: document.getElementById('allocate-intelligence'),
+        allocateStamina: document.getElementById('allocate-stamina'),
             
             // 战斗结果元素
             battleResult: document.getElementById('battle-result'),
@@ -177,8 +177,8 @@ class Game {
             this.ui.allocateIntelligence.addEventListener('click', () => this.allocateStatPoint('intelligence'));
         }
         
-        if (this.ui.allocateEndurance) {
-            this.ui.allocateEndurance.addEventListener('click', () => this.allocateStatPoint('endurance'));
+        if (this.ui.allocateStamina) {
+            this.ui.allocateStamina.addEventListener('click', () => this.allocateStatPoint('stamina'));
         }
         
         // 关闭模态框按钮
@@ -312,8 +312,17 @@ class Game {
         // 更新UI
         this.updateBattleUI();
         
-        // 保存玩家数据
-        this.savePlayerData();
+        // 检查玩家是否失败（死亡）
+        if (!playerWon) {
+            // 显示死亡提示弹窗
+            alert('你真菜，这就死了');
+            
+            // 重置玩家数据
+            this.resetPlayerData();
+        } else {
+            // 保存玩家数据（只有胜利时才保存）
+            this.savePlayerData();
+        }
         
         // 显示战斗结束模态框
         if (this.ui.battleEndModal) {
@@ -369,6 +378,23 @@ class Game {
         
         // 更新角色面板
         this.updateCharacterPanel();
+    }
+    
+    // 重置玩家数据
+    resetPlayerData() {
+        // 清除本地存储中的玩家数据
+        Utils.saveToStorage('playerData', null);
+        
+        // 创建新玩家（重置所有数据）
+        this.player = createPlayer();
+        
+        // 记录日志
+        this.logMessage('角色数据已重置！重新开始冒险吧！');
+        
+        // 更新所有相关UI显示
+        this.updateInventoryDisplay();
+        this.updateSkillsDisplay();
+        this.initializeUIDisplay();
     }
     
     // 更新战斗UI
@@ -462,7 +488,7 @@ class Game {
         statsHTML += '<tr><td>力量：</td><td>' + baseStats.strength + '</td></tr>';
         statsHTML += '<tr><td>敏捷：</td><td>' + baseStats.agility + '</td></tr>';
         statsHTML += '<tr><td>智力：</td><td>' + baseStats.intelligence + '</td></tr>';
-        statsHTML += '<tr><td>耐力：</td><td>' + baseStats.endurance + '</td></tr>';
+        statsHTML += '<tr><td>耐力：</td><td>' + baseStats.stamina + '</td></tr>';
         statsHTML += '</table>';
         
         this.ui.characterStats.innerHTML = statsHTML;
@@ -537,7 +563,6 @@ class Game {
         }
         
         this.player.allocateStatPoint(statName);
-        this.player.availablePoints--;
         
         // 更新UI
         this.updateCharacterPanel();
@@ -549,7 +574,7 @@ class Game {
             strength: '力量',
             agility: '敏捷',
             intelligence: '智力',
-            endurance: '耐力'
+            stamina: '耐力'
         };
         
         return names[statName] || statName;

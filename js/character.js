@@ -11,13 +11,32 @@ class Character {
         const data = initialData || defaultData;
         
         // 基础属性
-        this.baseStats = { ...data.baseStats };
+        this.baseStats = { 
+            strength: 10,
+            agility: 10,
+            intelligence: 10,
+            stamina: 10,
+            ...data.baseStats 
+        };
         this.level = data.level || 1;
         this.exp = data.exp || 0;
         this.statPoints = data.statPoints || 0;
         
         // 战斗基础值
-        this.baseCombatStats = { ...data.baseCombatStats };
+        this.baseCombatStats = { 
+            attack: 10,
+            magic: 10,
+            speed: 1.0,
+            critRate: 0.01,
+            critDamage: 1.0,
+            hp: 100,
+            defense: 10,
+            dodgeRate: 0.01,
+            blockRate: 0.01,
+            blockValue: 10,
+            cdr: 0,
+            ...data.baseCombatStats 
+        };
         
         // 当前状态
         this.currentHp = data.currentHp || 100;
@@ -341,6 +360,9 @@ class Character {
         if (damageType === '物理' && Utils.checkBlock(this.combatStats.blockRate)) {
             actualDamage = Utils.applyBlockDamage(actualDamage, this.combatStats.blockValue);
         }
+        
+        // 确保伤害为整数
+        actualDamage = Math.floor(actualDamage);
         
         // 应用伤害
         this.currentHp -= actualDamage;

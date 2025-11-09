@@ -355,10 +355,16 @@ const enemySkills = {
         type: 'active',
         description: '射出一支穿透性的箭矢',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.attack * 1.3);
+            // 确保属性存在且为有效数字
+            const userAttack = Number(user.combatStats?.attack) || Number(user.baseStats?.attack) || 10;
+            const targetDefense = Number(target.combatStats?.defense) || Number(target.baseStats?.defense) || 0;
+            
+            // 计算伤害
+            const damage = Math.floor(userAttack * 1.3);
             // 忽略目标部分防御
-            const effectiveDefense = target.baseStats.defense * 0.7;
-            const actualDamage = Math.max(1, damage - effectiveDefense);
+            const effectiveDefense = targetDefense * 0.7;
+            const actualDamage = Math.max(1, Math.floor(damage - effectiveDefense));
+            
             target.takeDamage(actualDamage, '物理');
             return { message: `${user.name} 射出了穿刺箭，对 ${target.name} 造成了 ${actualDamage} 点伤害，穿透了其防御！` };
         },

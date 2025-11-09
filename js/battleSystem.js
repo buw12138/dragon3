@@ -247,8 +247,8 @@ class BattleManager {
         const damageType = attacker === this.player ? '物理' : '物理';
         const actualDamage = target.takeDamage(damage, damageType);
         
-        // 确保actualDamage是有效数字
-        const displayDamage = isNaN(actualDamage) ? 0 : Math.max(0, actualDamage);
+        // 确保actualDamage是有效数字并且是整数
+        const displayDamage = isNaN(actualDamage) ? 0 : Math.max(0, Math.floor(actualDamage));
         
         // 记录战斗日志
         let message = `${attacker.name}攻击了${target.name}！`;

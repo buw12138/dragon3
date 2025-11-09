@@ -95,7 +95,7 @@ const INITIAL_CHARACTER = {
         strength: 10,
         agility: 10,
         intelligence: 10,
-    
+        stamina: 10
     },
     
     // 战斗基础值（不计算属性加成）

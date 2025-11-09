@@ -37,7 +37,8 @@ function calculateDamage(attack, defense) {
     const variance = getRandom(0.85, 1.15);
     damage = Math.floor(damage * variance);
     
-    return damage;
+    // 确保返回整数
+    return Math.floor(damage);
 }
 
 // 检查暴击
