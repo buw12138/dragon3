@@ -632,7 +632,9 @@ function createEnemy(enemyData) {
             // 创建飘字元素
             const floatElement = document.createElement('div');
             floatElement.className = `damage-number ${type}`;
-            floatElement.textContent = type === 'damage' ? `-${value}` : `+${value}`;
+            // 确保显示整数
+            const displayValue = Math.floor(Math.abs(value));
+            floatElement.textContent = type === 'damage' ? `-${displayValue}` : `+${displayValue}`;
             
             // 设置飘字样式
             floatElement.style.position = 'absolute';

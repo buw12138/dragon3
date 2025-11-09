@@ -12,9 +12,21 @@ const skills = [
         requirements: {}, // 无特殊要求
         // 技能效果函数，在战斗系统中调用
         effect: (user, target) => {
-            const damage = Math.floor(user.combatStats.attack * 1.5);
-            target.takeDamage(damage, '物理');
-            return { message: `${user.name} 使用了横扫千军，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            // 计算基础伤害
+            let damage = user.combatStats.attack * 1.5;
+            
+            // 应用伤害波动范围
+            const damageVariance = Number(user.combatStats?.damageVariance) || 0.1;
+            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
+            damage = damage * varianceMultiplier;
+            
+            // 应用伤害
+            const actualDamage = target.takeDamage(damage, '物理');
+            
+            return { 
+                message: `${user.name} 使用了横扫千军，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点伤害！`,
+                actualDamage: actualDamage
+            };
         },
         // 技能使用条件
         canUse: (user) => {
@@ -31,11 +43,21 @@ const skills = [
         description: '投掷一个火球，造成180%魔力的伤害',
         requirements: { intelligence: 15 }, // 需要15点智力
         effect: (user, target) => {
-            const damage = Math.floor(user.combatStats.magic * 1.8);
-            target.takeDamage(damage, '魔法');
+            // 计算基础伤害
+            let damage = user.combatStats.magic * 1.8;
+            
+            // 应用伤害波动范围
+            const damageVariance = Number(user.combatStats?.damageVariance) || 0.1;
+            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
+            damage = damage * varianceMultiplier;
+            
+            // 应用伤害
+            const actualDamage = target.takeDamage(damage, '魔法');
+            
             return { 
-                message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${damage} 点魔法伤害！`,
-                damageType: 'fire'
+                message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点魔法伤害！`,
+                damageType: 'fire',
+                actualDamage: actualDamage
             };
         },
         canUse: (user) => {
@@ -53,8 +75,11 @@ const skills = [
         requirements: { intelligence: 10 }, // 需要10点智力
         effect: (user) => {
             const healAmount = Math.floor(user.combatStats.hp * 0.2);
-            user.heal(healAmount);
-            return { message: `${user.name} 使用了治疗术，恢复了 ${healAmount} 点生命值！` };
+            const actualHeal = user.heal(healAmount);
+            return { 
+                message: `${user.name} 使用了治疗术，恢复了 ${actualHeal} 点生命值！`,
+                healAmount: actualHeal
+            };
         },
         canUse: (user) => {
             // 消耗魔力且生命值未满
@@ -70,22 +95,32 @@ const skills = [
         description: '召唤雷电攻击敌人，造成200%魔力的伤害，并可能使其麻痹',
         requirements: { intelligence: 25 }, // 需要25点智力
         effect: (user, target) => {
-            const damage = Math.floor(user.combatStats.magic * 2.0);
-            target.takeDamage(damage, '魔法');
+            // 计算基础伤害
+            let damage = user.combatStats.magic * 2.0;
+            
+            // 应用伤害波动范围
+            const damageVariance = Number(user.combatStats?.damageVariance) || 0.1;
+            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
+            damage = damage * varianceMultiplier;
+            
+            // 应用伤害
+            const actualDamage = target.takeDamage(damage, '魔法');
             
             // 30%几率使敌人麻痹
             if (Math.random() < 0.3) {
                 target.addStatusEffect('paralyzed', 2000); // 麻痹2秒
                 return { 
-                    message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${damage} 点魔法伤害，并使其麻痹！`,
+                    message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点魔法伤害，并使其麻痹！`,
                     damageType: 'thunder',
-                    statusEffect: 'paralyzed'
+                    statusEffect: 'paralyzed',
+                    actualDamage: actualDamage
                 };
             }
             
             return { 
-                message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${damage} 点魔法伤害！`,
-                damageType: 'thunder'
+                message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点魔法伤害！`,
+                damageType: 'thunder',
+                actualDamage: actualDamage
             };
         },
         canUse: (user) => {
@@ -101,11 +136,21 @@ const skills = [
         description: '旋转攻击周围敌人，造成120%攻击力的伤害',
         requirements: { strength: 20 }, // 需要20点力量
         effect: (user, target) => {
-            const damage = Math.floor(user.combatStats.attack * 1.2);
-            target.takeDamage(damage, '物理');
+            let damage = user.combatStats.attack * 1.2;
+            
+            // 应用伤害波动
+            const damageVariance = user.combatStats.damageVariance || 0.1;
+            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
+            damage = damage * varianceMultiplier;
+            
+            // 应用伤害
+            const actualDamage = target.takeDamage(damage, '物理');
             
             // 可以攻击多个目标（在当前版本简化为单体）
-            return { message: `${user.name} 使用了旋风斩，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            return { 
+                message: `${user.name} 使用了旋风斩，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点伤害！`,
+                actualDamage: actualDamage
+            };
         },
         canUse: (user) => {
             // 不再消耗体力

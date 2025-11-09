@@ -362,11 +362,12 @@ class BattleManager {
         // 执行技能效果
         this.addBattleLog(`${caster.name}使用了${skill.name}！`);
         
-        // 调用技能的效果函数
-        const effectResult = skill.applyEffect(caster, target, this);
+        // 调用技能的效果函数（使用正确的函数名effect）
+        const effectResult = skill.effect(caster, target);
         
         // 如果技能造成了伤害，添加受击震动效果
-        if (effectResult && effectResult.damage && effectResult.damage > 0) {
+        if (effectResult && (effectResult.damage || effectResult.actualDamage) && 
+            (effectResult.damage || effectResult.actualDamage) > 0) {
             this.applyHitEffect(target);
         }
         
