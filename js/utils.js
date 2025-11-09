@@ -102,6 +102,17 @@ function saveGame(gameData, saveKey = 'dragon3_game_save') {
     }
 }
 
+// 保存数据到本地存储
+function saveToStorage(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+        return true;
+    } catch (error) {
+        console.error(`保存数据到本地存储${key}失败:`, error);
+        return false;
+    }
+}
+
 // 从本地存储加载游戏数据
 function loadGame(saveKey = 'dragon3_game_save') {
     try {
@@ -114,6 +125,19 @@ function loadGame(saveKey = 'dragon3_game_save') {
         console.error('加载游戏失败:', error);
         return null;
     }
+}
+
+// 从本地存储加载数据
+function loadFromStorage(key) {
+    try {
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+            return JSON.parse(savedData);
+        }
+    } catch (error) {
+        console.error(`从本地存储加载${key}失败:`, error);
+    }
+    return null;
 }
 
 // 删除存档
@@ -358,6 +382,8 @@ const Utils = {
     deepClone,
     saveGame,
     loadGame,
+    saveToStorage,
+    loadFromStorage,
     deleteSave,
     getQualityColorClass,
     getQualityName,

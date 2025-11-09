@@ -94,9 +94,10 @@ body {
 }
 
 .hp-bar {
-    flex: 1 1 100%;
+    width: 150px;
     height: 25px;
-    background-color: #4CAF50;
+    background-color: #333;
+    border: 2px solid #666;
     border-radius: 10px;
     overflow: hidden;
     position: relative;
@@ -106,7 +107,7 @@ body {
     height: 100%;
     background-color: #4CAF50;
     transition: width 0.3s ease;
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 .hp-text {

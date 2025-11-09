@@ -205,26 +205,24 @@ class BattleManager {
     // 敌人攻击
     enemyAttack() {
         // 简单的敌人AI逻辑
-        if (this.enemy.behavior === 'aggressive') {
-            // 激进型敌人直接攻击
-            this.performBasicAttack(this.enemy, this.player);
-        } else if (this.enemy.behavior === 'cautious' && Math.random() < 0.7) {
-            // 谨慎型敌人有30%几率不攻击
-            this.performBasicAttack(this.enemy, this.player);
-        } else if (this.enemy.behavior === 'smart') {
-            // 智能型敌人可能会使用技能
-            if (this.enemy.skills && this.enemy.skills.length > 0 && Math.random() < 0.4) {
-                const skillId = this.enemy.skills[Math.floor(Math.random() * this.enemy.skills.length)];
-                const enemySkill = window.enemySkills?.find(s => s.id === skillId);
-                
-                if (enemySkill) {
-                    this.castEnemySkill(this.enemy, enemySkill, this.player);
-                } else {
-                    this.performBasicAttack(this.enemy, this.player);
-                }
+        // 根据敌人的behavior对象决定攻击行为
+        const behavior = this.enemy.behavior || {};
+        const attackPattern = behavior.attackPattern || 'normal';
+        
+        // 所有敌人都应该能够攻击，根据attackPattern决定攻击方式
+        if (behavior.useSkills && behavior.skills && behavior.skills.length > 0 && Math.random() < 0.4) {
+            // 随机选择一个可用技能
+            const skillId = behavior.skills[Math.floor(Math.random() * behavior.skills.length)];
+            const enemySkill = window.enemySkills[skillId];
+            
+            if (enemySkill) {
+                this.castEnemySkill(this.enemy, enemySkill, this.player);
             } else {
                 this.performBasicAttack(this.enemy, this.player);
             }
+        } else {
+            // 普通攻击
+            this.performBasicAttack(this.enemy, this.player);
         }
         
         // 记录攻击时间
@@ -233,13 +231,15 @@ class BattleManager {
     
     // 执行普通攻击
     performBasicAttack(attacker, target) {
-        // 计算伤害
-        let damage = attacker.combatStats?.attack || attacker.baseStats?.attack || 10;
+        // 计算伤害，确保是有效数字
+        let damage = Number(attacker.combatStats?.attack) || Number(attacker.baseStats?.attack) || 10;
+        damage = Math.max(1, damage); // 确保伤害至少为1
         
         // 检查暴击
-        const isCritical = Utils.checkCritical(attacker.combatStats?.critRate || attacker.baseStats?.critRate || 0);
+        const critRate = Number(attacker.combatStats?.critRate) || Number(attacker.baseStats?.critRate) || 0;
+        const isCritical = Utils.checkCritical(critRate);
         if (isCritical) {
-            const critDamageMultiplier = attacker.combatStats?.critDamage || attacker.baseStats?.critDamage || 1.5;
+            const critDamageMultiplier = Number(attacker.combatStats?.critDamage) || Number(attacker.baseStats?.critDamage) || 1.5;
             damage = Math.floor(damage * critDamageMultiplier);
         }
         
@@ -247,15 +247,18 @@ class BattleManager {
         const damageType = attacker === this.player ? '物理' : '物理';
         const actualDamage = target.takeDamage(damage, damageType);
         
+        // 确保actualDamage是有效数字
+        const displayDamage = isNaN(actualDamage) ? 0 : Math.max(0, actualDamage);
+        
         // 记录战斗日志
         let message = `${attacker.name}攻击了${target.name}！`;
-        if (actualDamage === 0) {
+        if (displayDamage === 0) {
             message += ' 但是被闪避了！';
         } else {
             if (isCritical) {
                 message += ' 暴击！';
             }
-            message += ` [${actualDamage}伤害]`;
+            message += ` [${displayDamage}伤害]`;
         }
         
         this.addBattleLog(message);
@@ -320,26 +323,23 @@ class BattleManager {
         this.addBattleLog(`${enemy.name}使用了${skill.name}！`);
         
         // 执行技能效果
-        if (skill.effect) {
-            const damage = skill.effect.damage || 0;
-            const damageType = skill.effect.damageType || '物理';
-            
-            if (damage > 0) {
-                // 计算敌人技能伤害
-                const enemyDamage = Math.floor(damage * (1 + (enemy.level * 0.05)));
-                const actualDamage = target.takeDamage(enemyDamage, damageType);
+        if (typeof skill.effect === 'function') {
+            try {
+                // 调用技能效果函数，传入使用者和目标
+                const result = skill.effect(enemy, target);
                 
-                this.addBattleLog(`${target.name}受到了${actualDamage}点${damageType}伤害！`);
+                // 如果技能函数返回了消息，则添加到战斗日志
+                if (result && result.message) {
+                    this.addBattleLog(result.message);
+                }
+            } catch (error) {
+                console.error('Enemy skill error:', error);
+                // 出错时执行普通攻击作为备选
+                this.performBasicAttack(enemy, target);
             }
-            
-            // 处理状态效果
-            if (skill.effect.statusEffect) {
-                const duration = skill.effect.duration || 2000;
-                target.addStatusEffect(skill.effect.statusEffect, duration);
-                
-                const statusName = skill.effect.statusEffectName || skill.effect.statusEffect;
-                this.addBattleLog(`${target.name}被${statusName}了！`);
-            }
+        } else {
+            // 如果没有有效的效果函数，执行普通攻击
+            this.performBasicAttack(enemy, target);
         }
     }
     
@@ -358,6 +358,9 @@ class BattleManager {
         // 确定战斗结果
         const playerWon = this.player && this.player.isAlive;
         
+        // 初始化奖励对象，无论战斗胜负都能访问
+        let rewards = { items: [], skills: [] };
+        
         // 记录战斗结果
         if (playerWon) {
             this.addBattleLog(`${this.player.name}获得了胜利！`);
@@ -372,7 +375,7 @@ class BattleManager {
             }
             
             // 生成战利品
-            const rewards = this.generateRewards(this.enemy);
+            rewards = this.generateRewards(this.enemy);
             if (rewards.items.length > 0) {
                 this.addBattleLog('获得了战利品：');
                 for (const item of rewards.items) {
