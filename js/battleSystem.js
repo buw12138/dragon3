@@ -26,6 +26,10 @@ class BattleManager {
         
         // 技能冷却（毫秒）
         this.skillsOnCooldown = {};
+        
+        // 战斗开始延迟设置
+        this.battleStartTime = 0; // 记录战斗开始时间
+        this.battleStartDelay = 1000; // 战斗开始延迟时间（毫秒）
     }
     
     // 初始化战斗
@@ -48,8 +52,12 @@ class BattleManager {
         
         this.isBattleActive = true;
         
+        // 记录战斗开始时间
+        this.battleStartTime = Date.now();
+        
         // 添加战斗开始日志
         this.addBattleLog(`${player.name}与${enemy.name}的战斗开始了！`);
+        this.addBattleLog('双方正在准备战斗...');
         
         // 开始战斗循环
         this.startBattleLoop();
@@ -194,17 +202,24 @@ class BattleManager {
     
     // 执行战斗回合（即时制，根据攻速决定攻击频率）
     executeBattleTurn() {
-        // 玩家攻击
-        if (this.player && this.player.isAlive) {
-            if (this.player.canPerformAttack()) {
-                this.playerAttack();
-            }
-        }
+        // 检查是否在战斗开始延迟期间
+        const currentTime = Date.now();
+        const battleActiveTime = currentTime - this.battleStartTime;
         
-        // 敌人攻击
-        if (this.enemy && this.enemy.isAlive) {
-            if (this.enemy.canPerformAttack()) {
-                this.enemyAttack();
+        // 只有在延迟时间过后才执行攻击逻辑
+        if (battleActiveTime >= this.battleStartDelay) {
+            // 玩家攻击
+            if (this.player && this.player.isAlive) {
+                if (this.player.canPerformAttack()) {
+                    this.playerAttack();
+                }
+            }
+            
+            // 敌人攻击
+            if (this.enemy && this.enemy.isAlive) {
+                if (this.enemy.canPerformAttack()) {
+                    this.enemyAttack();
+                }
             }
         }
     }

@@ -337,6 +337,47 @@ class Character {
         return skillId;
     }
     
+    // 显示伤害/治疗飘字
+    showFloatingText(value, type = 'damage') {
+        // 获取角色对应的DOM元素
+        // 玩家对象使用class Character
+        // 敌人对象是普通对象
+        let characterElement;
+        
+        // 检查name属性来区分玩家和敌人
+        if (this.name === '玩家') {
+            characterElement = document.querySelector('.player-sprite');
+        } else {
+            characterElement = document.querySelector('.enemy-sprite');
+        }
+        
+        if (!characterElement) return;
+        
+        // 创建飘字元素
+        const floatElement = document.createElement('div');
+        floatElement.className = `damage-number ${type}`;
+        floatElement.textContent = type === 'damage' ? `-${value}` : `+${value}`;
+        
+        // 设置位置（在角色头像旁边）
+        const rect = characterElement.getBoundingClientRect();
+        const container = characterElement.parentElement;
+        const containerRect = container.getBoundingClientRect();
+        
+        // 相对于容器定位
+        floatElement.style.left = `${rect.right - containerRect.left + 10}px`;
+        floatElement.style.top = `${rect.top - containerRect.top}px`;
+        
+        // 添加到容器中
+        container.appendChild(floatElement);
+        
+        // 动画结束后移除元素
+        setTimeout(() => {
+            if (floatElement.parentNode) {
+                floatElement.parentNode.removeChild(floatElement);
+            }
+        }, 1000);
+    }
+    
     // 受到伤害
     takeDamage(damage, damageType = '物理') {
         // 检查是否可以攻击
@@ -367,6 +408,9 @@ class Character {
         // 应用伤害
         this.currentHp -= actualDamage;
         
+        // 显示伤害飘字
+        this.showFloatingText(actualDamage, 'damage');
+        
         // 检查是否死亡
         if (this.currentHp <= 0) {
             this.currentHp = 0;
@@ -384,7 +428,12 @@ class Character {
         const previousHp = this.currentHp;
         this.currentHp = Math.min(this.currentHp + amount, this.combatStats.hp);
         
-        return this.currentHp - previousHp; // 返回实际恢复的生命值
+        const actualHeal = this.currentHp - previousHp;
+        
+        // 显示治疗飘字
+        this.showFloatingText(actualHeal, 'heal');
+        
+        return actualHeal; // 返回实际恢复的生命值
     }
     
     // 使用魔力
@@ -572,6 +621,38 @@ function createEnemy(enemyData) {
         drops: enemyData.drops,
         level: enemyData.level,
         
+        // 显示伤害/治疗飘字
+        showFloatingText: function(value, type = 'damage') {
+            // 获取敌人对应的DOM元素
+            const characterElement = document.querySelector('.enemy-sprite');
+            
+            if (!characterElement) return;
+            
+            // 创建飘字元素
+            const floatElement = document.createElement('div');
+            floatElement.className = `damage-number ${type}`;
+            floatElement.textContent = type === 'damage' ? `-${value}` : `+${value}`;
+            
+            // 设置位置（在敌人头像旁边）
+            const rect = characterElement.getBoundingClientRect();
+            const container = characterElement.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            
+            // 相对于容器定位
+            floatElement.style.left = `${rect.right - containerRect.left + 10}px`;
+            floatElement.style.top = `${rect.top - containerRect.top}px`;
+            
+            // 添加到容器中
+            container.appendChild(floatElement);
+            
+            // 动画结束后移除元素
+            setTimeout(() => {
+                if (floatElement.parentNode) {
+                    floatElement.parentNode.removeChild(floatElement);
+                }
+            }, 1000);
+        },
+        
         // 简化的攻击方法
         takeDamage: function(damage, damageType = '物理') {
             if (!this.isAlive) return 0;
@@ -584,6 +665,9 @@ function createEnemy(enemyData) {
             
             // 应用伤害
             this.currentHp -= actualDamage;
+            
+            // 显示伤害飘字
+            this.showFloatingText(actualDamage, 'damage');
             
             if (this.currentHp <= 0) {
                 this.currentHp = 0;

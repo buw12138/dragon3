@@ -168,6 +168,43 @@ body {
     animation: hitShake 0.3s ease-in-out;
 }
 
+/* 伤害/治疗飘字样式 */
+.damage-number {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 1000;
+    will-change: transform, opacity;
+}
+
+/* 伤害数字（红色） */
+.damage-number.damage {
+    color: #e74c3c;
+}
+
+/* 治疗数字（绿色） */
+.damage-number.heal {
+    color: #2ecc71;
+}
+
+/* 飘字动画 */
+@keyframes floatUp {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+}
+
+/* 应用动画 */
+.damage-number {
+    animation: floatUp 1s ease-out forwards;
+}
+
 /* 战斗日志 */
 .battle-log {
     width: 100%;
