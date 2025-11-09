@@ -30,7 +30,7 @@ const enemies = [
             items: [
                 { itemId: 'wooden_sword', chance: 0.2 },
                 { itemId: 'leather_armor', chance: 0.15 },
-                { itemId: 'skill_book_critical', chance: 0.05 }
+                { itemId: 'skill_book_critical', chance: 1 }
             ]
         },
         // 经验值奖励
@@ -58,7 +58,7 @@ const enemies = [
             gold: { min: 15, max: 25 },
             items: [
                 { itemId: 'cloth_boots', chance: 0.25 },
-                { itemId: 'skill_book_quick_attack', chance: 0.08 }
+                { itemId: 'skill_book_quick_attack', chance: 1 }
             ]
         },
         expReward: 25
@@ -84,7 +84,8 @@ const enemies = [
         drops: {
             gold: { min: 8, max: 20 },
             items: [
-                { itemId: 'leather_armor', chance: 0.2 }
+                { itemId: 'leather_armor', chance: 0.2 },
+                { itemId: 'skill_book_quick_attack', chance: 1 }
             ]
         },
         expReward: 15

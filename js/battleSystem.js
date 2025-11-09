@@ -454,9 +454,10 @@ class BattleManager {
                 this.addBattleLog('获得了技能书：');
                 for (const skillBook of rewards.skills) {
                     this.addBattleLog(`- ${skillBook.name}`);
-                    // 自动学习技能
-                    if (this.player && this.player.learnSkill(skillBook.skillId)) {
-                        this.addBattleLog(`学会了新技能：${skillBook.name}！`);
+                    // 将技能书添加到背包，而不是自动学习
+                    if (this.player && this.player.inventory) {
+                        this.player.inventory.push(skillBook);
+                        this.addBattleLog(`获得了技能书：${skillBook.name}`);
                     }
                 }
             }
@@ -468,7 +469,8 @@ class BattleManager {
         if (this.onBattleEnd) {
             this.onBattleEnd(playerWon, {
                 items: playerWon ? rewards.items : [],
-                skills: playerWon ? rewards.skills : []
+                // 不再传递skills数组，因为技能书已经添加到items中
+                skills: []
             });
         }
     }

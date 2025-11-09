@@ -363,14 +363,6 @@ class Game {
                         }
                         rewardsHTML += '</ul>';
                     }
-                    
-                    if (rewards.skills && rewards.skills.length > 0) {
-                        rewardsHTML += '<h4>技能书：</h4><ul>';
-                        for (const skill of rewards.skills) {
-                            rewardsHTML += '<li>' + skill.name + '</li>';
-                        }
-                        rewardsHTML += '</ul>';
-                    }
                 } else {
                     rewardsHTML = '<p>再接再厉！</p>';
                 }
@@ -968,19 +960,19 @@ class Game {
             return;
         }
         
-        // 确保玩家有skills数组
-        if (!this.player.skills) {
-            this.player.skills = [];
+        // 确保玩家有learnedSkills数组
+        if (!this.player.learnedSkills) {
+            this.player.learnedSkills = [];
         }
         
         // 检查是否已学习
-        if (this.player.skills.includes(skillBook.skillId)) {
+        if (this.player.learnedSkills.includes(skillBook.skillId)) {
             this.logMessage('你已经学习过这个技能了！');
             return;
         }
         
         // 学习技能
-        this.player.skills.push(skillBook.skillId);
+        this.player.learnedSkills.push(skillBook.skillId);
         
         // 从背包移除
         this.player.inventory.splice(index, 1);
@@ -1098,44 +1090,7 @@ class Game {
         
         let skillsHTML = '';
         
-        // 显示已学习的技能
-        skillsHTML += '<h4>已学习的技能</h4>';
-        
-        if (this.player.learnedSkills.length === 0) {
-            skillsHTML += '<div class="no-skills">还没有学习任何技能</div>';
-        } else {
-            skillsHTML += '<div class="skills-list">';
-            
-            for (const skillId of this.player.learnedSkills) {
-                const skill = this.gameSkills.find(s => s.id === skillId);
-                if (skill) {
-                    const isEquipped = this.player.memorySlots.includes(skillId);
-                    const slotIndex = this.player.memorySlots.indexOf(skillId);
-                    
-                    skillsHTML += '<div class="skill-item';
-                    if (isEquipped) {
-                        skillsHTML += ' equipped';
-                    }
-                    skillsHTML += '">';
-                    skillsHTML += '<div class="skill-name">' + skill.name + '</div>';
-                    skillsHTML += '<div class="skill-type">' + (skill.type === 'active' ? '主动' : '被动') + '</div>';
-                    skillsHTML += '<div class="skill-description">' + skill.description + '</div>';
-                    
-                    if (isEquipped) {
-                        skillsHTML += '<div class="skill-slot">装备于记忆栏位 ' + (slotIndex + 1) + '</div>';
-                        skillsHTML += '<button class="unequip-button" data-id="' + skillId + '" data-slot="' + slotIndex + '">卸下</button>';
-                    } else {
-                        skillsHTML += '<button class="equip-skill-button" data-id="' + skillId + '">装备到记忆栏位</button>';
-                    }
-                    
-                    skillsHTML += '</div>';
-                }
-            }
-            
-            skillsHTML += '</div>';
-        }
-        
-        // 显示记忆栏位
+        // 显示记忆栏位（置顶）
         skillsHTML += '<h4>记忆栏位</h4>';
         skillsHTML += '<div class="memory-slots">';
         
@@ -1145,14 +1100,13 @@ class Game {
             if (skillId) {
                 const skill = this.gameSkills.find(s => s.id === skillId);
                 if (skill) {
-                    skillsHTML += '<div class="memory-slot occupied">';
+                    skillsHTML += '<div class="memory-slot occupied" data-slot="' + i + '" data-skill-id="' + skillId + '">';
                     skillsHTML += '<div class="slot-number">' + (i + 1) + '</div>';
                     skillsHTML += '<div class="slot-skill-name">' + skill.name + '</div>';
-                    skillsHTML += '<button class="unequip-slot-button" data-slot="' + i + '">移除</button>';
                     skillsHTML += '</div>';
                 }
             } else {
-                skillsHTML += '<div class="memory-slot empty">';
+                skillsHTML += '<div class="memory-slot empty" data-slot="' + i + '">';
                 skillsHTML += '<div class="slot-number">' + (i + 1) + '</div>';
                 skillsHTML += '<div class="slot-empty">未装备</div>';
                 skillsHTML += '</div>';
@@ -1160,25 +1114,276 @@ class Game {
         }
         
         skillsHTML += '</div>';
+        
+        // 显示已学习的技能（格子布局）
+        skillsHTML += '<h4>已学习的技能</h4>';
+        
+        if (this.player.learnedSkills.length === 0) {
+            skillsHTML += '<div class="no-skills">还没有学习任何技能</div>';
+        } else {
+            skillsHTML += '<div class="skills-grid">';
+            
+            for (const skillId of this.player.learnedSkills) {
+                const skill = this.gameSkills.find(s => s.id === skillId);
+                if (skill) {
+                    const isEquipped = this.player.memorySlots.includes(skillId);
+                    
+                    skillsHTML += '<div class="skill-slot" data-skill-id="' + skillId + '"';
+                    if (isEquipped) {
+                        skillsHTML += ' data-equipped="true"';
+                    }
+                    skillsHTML += '>';
+                    skillsHTML += '<div class="skill-icon">';
+                    skillsHTML += skill.type === 'active' ? '⚔️' : '🛡️';
+                    skillsHTML += '</div>';
+                    skillsHTML += '<div class="skill-name">' + this.truncateText(skill.name, 6) + '</div>';
+                    if (isEquipped) {
+                        skillsHTML += '<div class="equipped-indicator">✓</div>';
+                    }
+                    skillsHTML += '</div>';
+                }
+            }
+            
+            skillsHTML += '</div>';
+        }
+        
         skillsContent.innerHTML = skillsHTML;
         
-        // 绑定技能装备按钮事件
-        const equipButtons = skillsContent.querySelectorAll('.equip-skill-button');
-        equipButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const skillId = e.target.getAttribute('data-id');
-                this.showEquipSkillDialog(skillId);
+        // 绑定技能格子事件
+        this.bindSkillEvents();
+    }
+    
+    // 绑定技能格子事件
+    bindSkillEvents() {
+        const skillsContent = document.getElementById('skills-content');
+        if (!skillsContent) return;
+        
+        // 移除现有的事件监听器（避免重复绑定）
+        document.querySelectorAll('.skill-slot').forEach(slot => {
+            slot.removeEventListener('mouseenter', this.handleSkillMouseEnter.bind(this));
+            slot.removeEventListener('mouseleave', this.handleSkillMouseLeave.bind(this));
+            slot.removeEventListener('contextmenu', this.handleSkillContextMenu.bind(this));
+        });
+        
+        document.querySelectorAll('.memory-slot.occupied').forEach(slot => {
+            slot.removeEventListener('mouseenter', this.handleSkillMouseEnter.bind(this));
+            slot.removeEventListener('mouseleave', this.handleSkillMouseLeave.bind(this));
+            slot.removeEventListener('contextmenu', this.handleMemorySlotContextMenu.bind(this));
+        });
+        
+        // 绑定技能格子的鼠标悬浮事件
+        const skillSlots = skillsContent.querySelectorAll('.skill-slot');
+        skillSlots.forEach(slot => {
+            slot.addEventListener('mouseenter', this.handleSkillMouseEnter.bind(this));
+            slot.addEventListener('mouseleave', this.handleSkillMouseLeave.bind(this));
+            slot.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.handleSkillContextMenu(e);
             });
         });
         
-        // 绑定技能卸下按钮事件
-        const unequipButtons = skillsContent.querySelectorAll('.unequip-button, .unequip-slot-button');
-        unequipButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const slotIndex = parseInt(e.target.getAttribute('data-slot'));
-                this.unequipSkillFromMemory(slotIndex);
+        // 绑定记忆栏位的鼠标悬浮事件
+        const memorySlots = skillsContent.querySelectorAll('.memory-slot.occupied');
+        memorySlots.forEach(slot => {
+            slot.addEventListener('mouseenter', (e) => {
+                this.handleSkillMouseEnter(e, true);
+            });
+            slot.addEventListener('mouseleave', this.handleSkillMouseLeave.bind(this));
+            slot.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.handleMemorySlotContextMenu(e);
             });
         });
+    }
+    
+    // 处理技能鼠标悬浮
+    handleSkillMouseEnter(e, isMemorySlot = false) {
+        const skillId = isMemorySlot ? e.currentTarget.getAttribute('data-skill-id') : e.currentTarget.getAttribute('data-skill-id');
+        const skill = this.gameSkills.find(s => s.id === skillId);
+        
+        if (skill) {
+            // 创建悬浮窗
+            const tooltip = document.createElement('div');
+            tooltip.className = 'skill-tooltip';
+            tooltip.id = 'skill-tooltip';
+            
+            tooltip.innerHTML = `
+                <div class="tooltip-title">${skill.name}</div>
+                <div class="tooltip-type">类型: ${skill.type === 'active' ? '主动' : '被动'}</div>
+                <div class="tooltip-description">${skill.description}</div>
+            `;
+            
+            // 添加条件要求
+            if (skill.requirements && Object.keys(skill.requirements).length > 0) {
+                let requirementsText = '<div class="tooltip-requirements">要求: ';
+                const reqParts = [];
+                if (skill.requirements.strength) reqParts.push(`力量 ${skill.requirements.strength}`);
+                if (skill.requirements.agility) reqParts.push(`敏捷 ${skill.requirements.agility}`);
+                if (skill.requirements.intelligence) reqParts.push(`智力 ${skill.requirements.intelligence}`);
+                requirementsText += reqParts.join(', ') + '</div>';
+                tooltip.innerHTML += requirementsText;
+            }
+            
+            document.body.appendChild(tooltip);
+            this.positionTooltip(e, tooltip);
+        }
+    }
+    
+    // 处理技能鼠标离开
+    handleSkillMouseLeave() {
+        const tooltip = document.getElementById('skill-tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+    }
+    
+    // 处理技能右键菜单
+    handleSkillContextMenu(e) {
+        const skillId = e.currentTarget.getAttribute('data-skill-id');
+        const isEquipped = e.currentTarget.hasAttribute('data-equipped');
+        
+        // 移除已存在的菜单
+        this.hideSkillContextMenu();
+        
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        menu.id = 'skill-context-menu';
+        // 设置样式确保可见
+        menu.style.cssText = `
+            position: fixed;
+            left: ${e.clientX + 10}px;
+            top: ${e.clientY + 10}px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 5px 0;
+            min-width: 100px;
+            z-index: 1000;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        `;
+        
+        // 确保总是有菜单项显示
+        if (!isEquipped) {
+            menu.innerHTML = `
+                <div class="context-menu-item" data-action="memorize" data-skill-id="${skillId}">记忆</div>
+            `;
+        } else {
+            // 已装备的技能也应该有菜单项，比如查看详情
+            menu.innerHTML = `
+                <div class="context-menu-item" data-action="info" data-skill-id="${skillId}">查看详情</div>
+            `;
+        }
+        
+        // 确保菜单显示出来
+        menu.style.display = 'block';
+        
+        document.body.appendChild(menu);
+        
+        // 处理菜单项点击
+        menu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.handleSkillContextMenuItem(e);
+        });
+        
+        // 点击其他地方关闭菜单
+        document.addEventListener('click', this.handleSkillMenuOutsideClick);
+    }
+    
+    // 处理记忆栏位右键菜单
+    handleMemorySlotContextMenu(e) {
+        const skillId = e.currentTarget.getAttribute('data-skill-id');
+        const slotIndex = parseInt(e.currentTarget.getAttribute('data-slot'));
+        
+        // 移除已存在的菜单
+        this.hideSkillContextMenu();
+        
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        menu.id = 'skill-context-menu';
+        // 设置样式确保可见
+        menu.style.cssText = `
+            position: fixed;
+            left: ${e.clientX + 10}px;
+            top: ${e.clientY + 10}px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 5px 0;
+            min-width: 100px;
+            z-index: 1000;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        `;
+        
+        menu.innerHTML = `
+            <div class="context-menu-item" data-action="forget" data-slot="${slotIndex}" data-skill-id="${skillId}">遗忘</div>
+        `;
+        
+        // 确保菜单显示出来
+        menu.style.display = 'block';
+        
+        document.body.appendChild(menu);
+        
+        // 处理菜单项点击
+        menu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.handleSkillContextMenuItem(e);
+        });
+        
+        // 点击其他地方关闭菜单
+        document.addEventListener('click', this.handleSkillMenuOutsideClick);
+    }
+    
+    // 处理技能右键菜单项点击
+    handleSkillContextMenuItem(e) {
+        const action = e.target.getAttribute('data-action');
+        
+        if (action === 'memorize') {
+            const skillId = e.target.getAttribute('data-skill-id');
+            this.memorizeSkill(skillId);
+        } else if (action === 'forget') {
+            const slotIndex = parseInt(e.target.getAttribute('data-slot'));
+            this.unequipSkillFromMemory(slotIndex);
+        }
+        
+        this.hideSkillContextMenu();
+    }
+    
+    // 处理菜单外部点击
+    handleSkillMenuOutsideClick = (e) => {
+        const menu = document.getElementById('skill-context-menu');
+        if (menu && !menu.contains(e.target)) {
+            this.hideSkillContextMenu();
+        }
+    };
+    
+    // 隐藏技能右键菜单
+    hideSkillContextMenu() {
+        const menu = document.getElementById('skill-context-menu');
+        if (menu) {
+            menu.remove();
+            document.removeEventListener('click', this.handleSkillMenuOutsideClick);
+        }
+    }
+    
+    // 记忆技能到记忆栏位
+    memorizeSkill(skillId) {
+        // 查找第一个空的记忆栏位
+        const emptySlotIndex = this.player.memorySlots.findIndex(slot => !slot);
+        
+        if (emptySlotIndex === -1) {
+            this.logMessage('记忆栏位已满！');
+            return;
+        }
+        
+        // 装备技能到空栏位
+        this.player.memorySlots[emptySlotIndex] = skillId;
+        const skill = this.gameSkills.find(s => s.id === skillId);
+        this.logMessage(`成功记忆技能 ${skill.name}！`);
+        
+        // 更新技能显示
+        this.updateSkillsDisplay();
     }
     
     // 显示装备技能对话框
