@@ -21,6 +21,8 @@ class Character {
         this.level = data.level || 1;
         this.exp = data.exp || 0;
         this.statPoints = data.statPoints || 0;
+        // 添加击败敌人计数属性
+        this.defeatedEnemies = data.defeatedEnemies || 0;
         
         // 战斗基础值
         this.baseCombatStats = { 
@@ -611,11 +613,17 @@ class Character {
         return Object.values(this.baseStats).reduce((sum, stat) => sum + stat, 0);
     }
     
-    // 获取角色等级（基于基础属性总和）
+    // 获取角色等级（基于击败的敌人数量）
     getLevel() {
-        const totalStats = this.getBaseStatsTotal();
-        // 假设初始等级为1，每10点总属性提升1级
-        return Math.floor(totalStats / 10);
+        // 初始等级为1，每击败3个怪物提升1级
+        return Math.floor(this.defeatedEnemies / 3) + 1;
+    }
+    
+    // 增加击败的敌人数量
+    incrementDefeatedEnemies() {
+        this.defeatedEnemies++;
+        // 返回新的等级，用于检查是否升级
+        return this.getLevel();
     }
 }
 

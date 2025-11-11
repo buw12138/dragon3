@@ -432,7 +432,7 @@ class Game {
         if (this.ui.playerPanel) {
             const playerLevel = this.ui.playerPanel.querySelector('.character-level');
             if (playerLevel) {
-                playerLevel.textContent = '等级 ' + (this.player.level || 1);
+                playerLevel.textContent = '等级 ' + (this.player.getLevel() || 1);
             }
             
             // 更新HP条
@@ -482,7 +482,7 @@ class Game {
         if (this.ui.playerPanel && this.player) {
             const playerLevel = this.ui.playerPanel.querySelector('.character-level');
             if (playerLevel) {
-                playerLevel.textContent = '等级 ' + (this.player.level || 1);
+                playerLevel.textContent = '等级 ' + (this.player.getLevel() || 1);
             }
             
             // 更新HP显示
@@ -508,6 +508,7 @@ class Game {
         
         // 更新基础属性
         let statsHTML = '<h4>基础属性</h4><table>';
+        statsHTML += '<tr><td>等级：</td><td>' + this.player.getLevel() + '</td></tr>';
         const baseStats = this.player.baseStats;
         
         statsHTML += '<tr><td>力量：</td><td>' + baseStats.strength + '</td></tr>';

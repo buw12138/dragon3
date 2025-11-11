@@ -437,6 +437,15 @@ class BattleManager {
             if (this.player) {
                 this.player.wins += 1;
                 
+                // 增加击败敌人计数
+                const oldLevel = this.player.getLevel();
+                const newLevel = this.player.incrementDefeatedEnemies();
+                
+                // 检查是否升级
+                if (newLevel > oldLevel) {
+                    this.addBattleLog(`等级提升！当前等级：${newLevel}`);
+                }
+                
                 // 获得属性点奖励
                 this.player.availablePoints += 3;
                 this.addBattleLog(`获得了3点属性点！`);
