@@ -24,6 +24,8 @@ class Game {
         this._boundContextMenu = null;
         this._boundContextMenuItem = null;
         this._boundHideContextMenu = null;
+        this._boundEquipmentMouseEnter = null;
+        this._boundEquipmentMouseLeave = null;
         
         // 注意：不再在构造函数中立即调用init()，而是让initGame()函数控制初始化时机
     }
@@ -563,7 +565,7 @@ class Game {
                     const qualityColorClass = Utils.getQualityColorClass(item.quality);
                     equipmentHTML += '<div class="equipment-slot">';
                     equipmentHTML += '<div class="slot-name">' + name + '</div>';
-                    equipmentHTML += '<div class="slot-item ' + qualityColorClass + '">' + item.name + '</div>';
+                    equipmentHTML += '<div class="slot-item ' + qualityColorClass + '" data-equipment-slot="' + slot + '">' + item.name + '</div>';
                     equipmentHTML += '</div>';
                 } else {
                     equipmentHTML += '<div class="equipment-slot">';
@@ -575,7 +577,63 @@ class Game {
             
             equipmentHTML += '</div>';
             this.ui.characterEquipment.innerHTML = equipmentHTML;
+            
+            // 绑定装备悬浮事件
+            this.bindEquipmentEvents();
         }
+    }
+    
+    // 处理装备鼠标悬浮进入
+    handleEquipmentMouseEnter(e) {
+        const slot = e.currentTarget;
+        const equipmentSlot = slot.getAttribute('data-equipment-slot');
+        
+        // 获取该槽位的装备
+        const item = this.player.equipment[equipmentSlot];
+        if (!item) return;
+        
+        const tooltip = document.getElementById('item-tooltip');
+        
+        // 清除所有品质和类型相关的类
+        tooltip.className = 'item-tooltip';
+        
+        // 根据品质设置对应的颜色边框
+        const quality = item.quality || 0;
+        switch(quality) {
+            case 0: tooltip.classList.add('quality-0'); break;
+            case 1: tooltip.classList.add('quality-1'); break;
+            case 2: tooltip.classList.add('quality-2'); break;
+            case 3: tooltip.classList.add('quality-3'); break;
+            case 4: tooltip.classList.add('quality-4'); break;
+            default: tooltip.classList.add('quality-0'); // 默认白色
+        }
+        
+        // 生成物品详情
+        tooltip.innerHTML = this.getItemDetails(item);
+        
+        // 显示悬浮窗
+        tooltip.style.display = 'block';
+        
+        // 定位悬浮窗
+        this.positionTooltip(e, tooltip);
+    }
+    
+    // 绑定装备事件
+    bindEquipmentEvents() {
+        // 移除旧的事件监听器，避免重复绑定
+        const equipmentItems = document.querySelectorAll('.equipment-slot .slot-item[data-equipment-slot]');
+        equipmentItems.forEach(item => {
+            // 移除可能存在的事件监听器
+            item.removeEventListener('mouseenter', this._boundEquipmentMouseEnter);
+            item.removeEventListener('mouseleave', this._boundEquipmentMouseLeave);
+            
+            // 绑定新的事件监听器
+            this._boundEquipmentMouseEnter = this.handleEquipmentMouseEnter.bind(this);
+            this._boundEquipmentMouseLeave = this.handleItemMouseLeave.bind(this);
+            
+            item.addEventListener('mouseenter', this._boundEquipmentMouseEnter);
+            item.addEventListener('mouseleave', this._boundEquipmentMouseLeave);
+        });
     }
     
     // 分配属性点
