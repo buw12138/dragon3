@@ -1250,13 +1250,29 @@ class Game {
             return;
         }
         
-        // 尝试装备物品
-        const success = this.player.equipItem(item);
+        // 获取最大背包容量
+        const maxSlots = this.player.backpackSlots || 12;
         
-        if (success) {
-            // 从背包移除物品
+        // 尝试装备物品（会返回被替换的旧装备）
+        const oldItem = this.player.equipItem(item);
+        
+        if (oldItem !== false) {
+            // 从背包移除新装备
             this.player.inventory.splice(index, 1);
-            this.logMessage('成功装备了' + item.name + '！');
+            
+            // 如果有旧装备，尝试将其添加到背包
+            if (oldItem) {
+                // 检查背包是否已满
+                if (this.player.inventory.length < maxSlots) {
+                    this.player.inventory.push(oldItem);
+                    this.logMessage('成功装备了' + item.name + '！将' + oldItem.name + '放回背包。');
+                } else {
+                    this.logMessage('警告：背包已满，无法将' + oldItem.name + '放回背包！');
+                    // 这里可以选择将旧装备丢弃或给出其他提示
+                }
+            } else {
+                this.logMessage('成功装备了' + item.name + '！');
+            }
             
             // 更新UI
             this.updateInventoryDisplay();
