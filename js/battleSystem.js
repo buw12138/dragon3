@@ -448,9 +448,19 @@ class BattleManager {
                 this.addBattleLog('获得了战利品：');
                 for (const item of rewards.items) {
                     this.addBattleLog(`- ${item.name}`);
-                    // 添加到玩家背包
+                    // 检查背包容量
                     if (this.player) {
-                        this.player.inventory.push(item);
+                        const maxSlots = this.player.backpackSlots || 12;
+                        if (this.player.inventory.length < maxSlots) {
+                            this.player.inventory.push(item);
+                        } else {
+                            // 背包已满，显示提示信息
+                            this.addBattleLog(`警告：背包已满，无法获得${item.name}`);
+                            // 如果游戏对象存在，使用游戏的日志方法显示给玩家
+                            if (window.game && window.game.logMessage) {
+                                window.game.logMessage(`只好将${item.name}丢掉了`);
+                            }
+                        }
                     }
                 }
             }
@@ -459,10 +469,20 @@ class BattleManager {
                 this.addBattleLog('获得了技能书：');
                 for (const skillBook of rewards.skills) {
                     this.addBattleLog(`- ${skillBook.name}`);
-                    // 将技能书添加到背包，而不是自动学习
+                    // 检查背包容量并将技能书添加到背包
                     if (this.player && this.player.inventory) {
-                        this.player.inventory.push(skillBook);
-                        this.addBattleLog(`获得了技能书：${skillBook.name}`);
+                        const maxSlots = this.player.backpackSlots || 12;
+                        if (this.player.inventory.length < maxSlots) {
+                            this.player.inventory.push(skillBook);
+                            this.addBattleLog(`获得了技能书：${skillBook.name}`);
+                        } else {
+                            // 背包已满，显示提示信息
+                            this.addBattleLog(`警告：背包已满，无法获得${skillBook.name}`);
+                            // 如果游戏对象存在，使用游戏的日志方法显示给玩家
+                            if (window.game && window.game.logMessage) {
+                                window.game.logMessage(`只好将${skillBook.name}丢掉了`);
+                            }
+                        }
                     }
                     // 将技能书也添加到items数组，以便在战斗胜利面板中显示
                     rewards.items.push(skillBook);

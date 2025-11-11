@@ -651,8 +651,8 @@ class Game {
         const inventoryContent = document.getElementById('inventory-content');
         if (!inventoryContent || !this.player) return;
         
-        // 确保背包容量至少为24
-        const maxSlots = this.player.backpackSlots || 24;
+        // 确保背包容量至少为12
+        const maxSlots = this.player.backpackSlots || 12;
         
         let inventoryHTML = '<div class="inventory-grid">';
         
@@ -1206,7 +1206,7 @@ class Game {
         
         // 确保玩家有backpackSlots属性
         if (!this.player.backpackSlots) {
-            this.player.backpackSlots = 24; // 初始24格
+            this.player.backpackSlots = 12; // 初始12格
         }
         
         // 增加背包格子数
@@ -1782,6 +1782,17 @@ if (typeof window !== 'undefined') {
             console.error('物品不存在:', itemId);
             console.log('可用物品ID列表:');
             defaultItems.forEach(i => console.log(`- ${i.id}: ${i.name}`));
+            return false;
+        }
+        
+        // 检查背包容量
+        const maxSlots = window.game.player.backpackSlots || 12;
+        if (window.game.player.inventory.length >= maxSlots) {
+            console.warn(`警告：背包已满，无法添加物品${item.name}`);
+            // 显示提示信息给玩家
+            if (window.game.logMessage) {
+                window.game.logMessage(`只好将${item.name}丢掉了`);
+            }
             return false;
         }
         
