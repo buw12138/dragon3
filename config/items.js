@@ -141,8 +141,30 @@ const items = [
         },
         description: '增强魔法能力的帽子'
     },
-    
-    // 蓝色品质装备
+      
+     // 蓝色品质装备
+     {
+         id: 'blood_drain_blade',
+         name: '吸血之刃',
+         type: 'equipment',
+         slot: 'mainHand',
+         quality: 2,
+         canEquip: true,
+         canUse: false,
+         canDrop: true,
+         baseStats: {
+             attack: 15,
+             magic: 5
+         },
+         extraStats: [
+             { stat: 'attack', value: 8 },
+             { stat: 'critRate', value: 0.05 }
+         ],
+         specialAttributes: {
+             lifesteal: 0.15
+         },
+         description: '邪恶的武器，攻击敌人时能吸取他们的生命精华'
+     },
     {
         id: 'flame_sword',
         name: '火焰剑',

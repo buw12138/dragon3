@@ -530,18 +530,41 @@ class Game {
         
         combatStatsHTML += '<tr><td>攻击：</td><td>' + Math.floor(combatStats.attack) + '</td></tr>';
         combatStatsHTML += '<tr><td>魔力：</td><td>' + Math.floor(combatStats.magic) + '</td></tr>';
-        combatStatsHTML += '<tr><td>攻速：</td><td>' + combatStats.speed.toFixed(2) + '</td></tr>';
-        combatStatsHTML += '<tr><td>暴击率：</td><td>' + Utils.formatCombatStat('critRate', combatStats.critRate) + '</td></tr>';
-        combatStatsHTML += '<tr><td>暴击伤害：</td><td>+' + Utils.formatCombatStat('critDamage', combatStats.critDamage - 1) + '</td></tr>';
-        combatStatsHTML += '<tr><td>生命值：</td><td>' + Math.floor(this.player.currentHp) + '/' + Math.floor(combatStats.hp) + '</td></tr>';
         combatStatsHTML += '<tr><td>防御：</td><td>' + Math.floor(combatStats.defense) + '</td></tr>';
-        combatStatsHTML += '<tr><td>闪避率：</td><td>' + Utils.formatCombatStat('dodgeRate', combatStats.dodgeRate) + '</td></tr>';
-        combatStatsHTML += '<tr><td>格挡率：</td><td>' + Utils.formatCombatStat('blockRate', combatStats.blockRate) + '</td></tr>';
-        combatStatsHTML += '<tr><td>格挡值：</td><td>' + Math.floor(combatStats.blockValue) + '</td></tr>';
-        combatStatsHTML += '<tr><td>冷却缩减：</td><td>' + Utils.formatCombatStat('cdr', combatStats.cdr) + '</td></tr>';
+        combatStatsHTML += '<tr><td>攻速：</td><td>' + combatStats.speed.toFixed(2) + '</td></tr>';
+        combatStatsHTML += '<tr><td>暴击：</td><td>' + Utils.formatCombatStat('critRate', combatStats.critRate) + '</td></tr>';
+        combatStatsHTML += '<tr><td>暴伤：</td><td>' + Utils.formatCombatStat('critDamage', combatStats.critDamage) + '</td></tr>';
+        combatStatsHTML += '<tr><td>生命：</td><td>' + Math.floor(this.player.currentHp) + '/' + Math.floor(combatStats.hp) + '</td></tr>';
+        combatStatsHTML += '<tr><td>闪避：</td><td>' + Utils.formatCombatStat('dodgeRate', combatStats.dodgeRate) + '</td></tr>';
+        combatStatsHTML += '<tr><td>韧性：</td><td>' + Utils.formatCombatStat('blockRate', combatStats.blockRate) + '</td></tr>';
+        combatStatsHTML += '<tr><td>韧度：</td><td>' + Math.floor(combatStats.blockValue) + '</td></tr>';
+        combatStatsHTML += '<tr><td>冷却：</td><td>' + Utils.formatCombatStat('cdr', combatStats.cdr) + '</td></tr>';
         
         combatStatsHTML += '</table>';
         this.ui.characterCombatStats.innerHTML = combatStatsHTML;
+        
+        // 规范化特殊属性值
+        this.player.normalizeSpecialAttributes();
+        
+        // 更新特殊属性显示
+        let specialStatsHTML = '<h4>特殊属性</h4><table>';
+        const specialAttributes = this.player.specialAttributes;
+        
+        // 百分比格式的属性（小于1显示为百分比，大于等于1显示为整数）
+        specialStatsHTML += '<tr><td>吸血：</td><td>' + Utils.formatCombatStat('lifesteal', specialAttributes.lifesteal) + '</td></tr>';
+        specialStatsHTML += '<tr><td>连击：</td><td>' + Utils.formatCombatStat('combo', specialAttributes.combo) + '</td></tr>';
+        specialStatsHTML += '<tr><td>侵蚀：</td><td>' + Utils.formatCombatStat('statusChance', specialAttributes.statusChance) + '</td></tr>';
+        specialStatsHTML += '<tr><td>抗性：</td><td>' + Utils.formatCombatStat('statusResistance', specialAttributes.statusResistance) + '</td></tr>';
+        specialStatsHTML += '<tr><td>疗效：</td><td>' + Utils.formatCombatStat('healingBonus', specialAttributes.healingBonus) + '</td></tr>';
+        
+        // 数值格式的属性
+        specialStatsHTML += '<tr><td>自愈：</td><td>' + specialAttributes.regeneration.toFixed(0) + '</td></tr>';
+        specialStatsHTML += '<tr><td>幸运：</td><td>' + specialAttributes.luck.toFixed(0) + '</td></tr>';
+        
+        specialStatsHTML += '</table>';
+        
+        // 将特殊属性添加到战斗属性面板中
+        this.ui.characterCombatStats.innerHTML += specialStatsHTML;
         
         // 更新装备显示
         if (this.ui.characterEquipment) {
@@ -571,7 +594,7 @@ class Game {
                 } else {
                     equipmentHTML += '<div class="equipment-slot">';
                     equipmentHTML += '<div class="slot-name">' + name + '</div>';
-                    equipmentHTML += '<div class="slot-empty">未装备</div>';
+                    equipmentHTML += '<div class="slot-empty" data-equipment-slot="' + slot + '">未装备</div>';
                     equipmentHTML += '</div>';
                 }
             }
@@ -593,7 +616,15 @@ class Game {
         const item = this.player.equipment[equipmentSlot];
         if (!item) return;
         
-        const tooltip = document.getElementById('item-tooltip');
+        let tooltip = document.getElementById('item-tooltip');
+        
+        // 如果tooltip不存在，创建一个
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'item-tooltip';
+            tooltip.className = 'item-tooltip';
+            document.body.appendChild(tooltip);
+        }
         
         // 清除所有品质和类型相关的类
         tooltip.className = 'item-tooltip';
@@ -622,18 +653,29 @@ class Game {
     // 绑定装备事件
     bindEquipmentEvents() {
         // 移除旧的事件监听器，避免重复绑定
-        const equipmentItems = document.querySelectorAll('.equipment-slot .slot-item[data-equipment-slot]');
+        const equipmentItems = document.querySelectorAll('.equipment-slot [data-equipment-slot]');
         equipmentItems.forEach(item => {
             // 移除可能存在的事件监听器
             item.removeEventListener('mouseenter', this._boundEquipmentMouseEnter);
             item.removeEventListener('mouseleave', this._boundEquipmentMouseLeave);
+            item.removeEventListener('contextmenu', this._boundEquipmentContextMenu);
             
             // 绑定新的事件监听器
             this._boundEquipmentMouseEnter = this.handleEquipmentMouseEnter.bind(this);
             this._boundEquipmentMouseLeave = this.handleItemMouseLeave.bind(this);
+            this._boundEquipmentContextMenu = this.handleEquipmentContextMenu.bind(this);
             
             item.addEventListener('mouseenter', this._boundEquipmentMouseEnter);
             item.addEventListener('mouseleave', this._boundEquipmentMouseLeave);
+            item.addEventListener('contextmenu', this._boundEquipmentContextMenu);
+        });
+
+        // 绑定装备右键菜单事件
+        const equipmentMenuItems = document.querySelectorAll('#equipment-context-menu .context-menu-item');
+        equipmentMenuItems.forEach(item => {
+            item.removeEventListener('click', this._boundEquipmentContextMenuItem);
+            this._boundEquipmentContextMenuItem = this.handleEquipmentContextMenuItem.bind(this);
+            item.addEventListener('click', this._boundEquipmentContextMenuItem);
         });
     }
     
@@ -666,11 +708,19 @@ class Game {
             critRate: '暴击',
             critDamage: '暴伤',
             dodgeRate: '闪避',
-            blockRate: '格挡',
-            blockValue: '格挡',
+            blockRate: '韧性',
+            blockValue: '韧度',
             cdr: '冷却',
             speed: '攻速',
-            damageVariance: '浮动'
+            damageVariance: '散射',
+            // 特殊属性
+            lifesteal: '吸血',
+            combo: '连击',
+            regeneration: '自愈',
+            statusChance: '侵蚀',
+            statusResistance: '抗性',
+            healingBonus: '疗效',
+            luck: '幸运'
         };
         
         return names[statName] || statName;
@@ -792,6 +842,18 @@ class Game {
             `;
             document.body.appendChild(menu);
         }
+
+        // 添加装备右键菜单
+        if (!document.getElementById('equipment-context-menu')) {
+            const equipmentMenu = document.createElement('div');
+            equipmentMenu.id = 'equipment-context-menu';
+            equipmentMenu.className = 'context-menu';
+            equipmentMenu.innerHTML = `
+                <div class="context-menu-item" data-action="unequip">卸下</div>
+                <div class="context-menu-item" data-action="discard-equipment">丢弃</div>
+            `;
+            document.body.appendChild(equipmentMenu);
+        }
         
         // 绑定事件
         this.bindItemEvents();
@@ -898,7 +960,9 @@ class Game {
     // 处理物品鼠标悬浮离开
     handleItemMouseLeave() {
         const tooltip = document.getElementById('item-tooltip');
-        tooltip.style.display = 'none';
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
     }
     
     // 处理物品右键菜单
@@ -1003,12 +1067,192 @@ class Game {
     
     // 隐藏右键菜单
     hideContextMenu() {
+        // 隐藏背包物品右键菜单
         const menu = document.getElementById('context-menu');
         if (menu) {
             menu.style.display = 'none';
         }
+        
+        // 隐藏装备右键菜单
+        const equipmentMenu = document.getElementById('equipment-context-menu');
+        if (equipmentMenu) {
+            equipmentMenu.style.display = 'none';
+        }
     }
     
+    // 处理装备右键菜单
+    handleEquipmentContextMenu(e) {
+        e.preventDefault();
+        
+        const slot = e.currentTarget;
+        const equipmentSlot = slot.getAttribute('data-equipment-slot');
+        
+        // 获取该槽位的装备
+        const item = this.player.equipment[equipmentSlot];
+        if (!item) return;
+        
+        const menu = document.getElementById('equipment-context-menu');
+        
+        // 检查菜单元素是否存在
+        if (!menu) {
+            console.warn('装备右键菜单元素不存在');
+            return;
+        }
+        
+        // 保存当前选中的装备槽位
+        menu.setAttribute('data-equipment-slot', equipmentSlot);
+        
+        // 根据物品品质设置右键菜单边框颜色
+        const quality = item.quality || 0;
+        menu.className = 'context-menu';
+        menu.classList.add(`context-menu-quality-${quality}`);
+        
+        // 显示右键菜单
+        menu.style.left = (e.clientX + 10) + 'px';
+        menu.style.top = (e.clientY + 10) + 'px';
+        menu.style.display = 'block';
+    }
+
+    // 处理装备右键菜单项点击
+    handleEquipmentContextMenuItem(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const menu = document.getElementById('equipment-context-menu');
+        const equipmentSlot = menu.getAttribute('data-equipment-slot');
+        const action = e.target.getAttribute('data-action');
+        
+        // 增加参数验证
+        if (e.target.classList.contains('disabled')) return;
+        if (!equipmentSlot || typeof equipmentSlot !== 'string') {
+            console.warn('无效的装备槽位:', equipmentSlot);
+            this.hideEquipmentContextMenu();
+            return;
+        }
+        
+        // 验证玩家数据和装备槽位
+        if (!this.player || !this.player.equipment || !this.player.equipment[equipmentSlot]) {
+            console.warn('玩家数据无效或装备槽位为空');
+            this.hideEquipmentContextMenu();
+            return;
+        }
+        
+        switch (action) {
+            case 'unequip':
+                this.unequipEquipment(equipmentSlot);
+                break;
+            case 'discard-equipment':
+                this.discardEquipment(equipmentSlot);
+                break;
+        }
+        
+        this.hideEquipmentContextMenu();
+    }
+
+    // 隐藏装备右键菜单
+    hideEquipmentContextMenu() {
+        const menu = document.getElementById('equipment-context-menu');
+        if (menu) {
+            menu.style.display = 'none';
+        }
+    }
+
+    // 卸下装备（从装备槽位返回到背包）
+    unequipEquipment(equipmentSlot) {
+        try {
+            // 检查参数
+            if (!equipmentSlot || typeof equipmentSlot !== 'string') {
+                console.warn('无效的装备槽位:', equipmentSlot);
+                return;
+            }
+
+            // 检查玩家数据
+            if (!this.player || !this.player.equipment) {
+                console.warn('玩家数据无效');
+                return;
+            }
+
+            // 检查装备槽位是否有装备
+            if (!this.player.equipment[equipmentSlot]) {
+                this.logMessage('该槽位没有装备！');
+                return;
+            }
+
+            // 检查背包容量
+            const maxSlots = this.player.backpackSlots || 12;
+            if (this.player.inventory.length >= maxSlots) {
+                this.logMessage('背包已满，无法卸下装备！');
+                return;
+            }
+
+            // 卸下装备（从character.js的方法）
+            const unequippedItem = this.player.unequipItem(equipmentSlot);
+            
+            if (unequippedItem) {
+                // 将装备添加到背包
+                this.player.inventory.push(unequippedItem);
+                this.logMessage(`成功卸下 ${unequippedItem.name} 并放入背包！`);
+                
+                // 更新UI
+                this.updateCharacterPanel();
+                this.updateInventoryDisplay();
+                this.savePlayerData();
+            } else {
+                console.warn('卸下装备失败');
+                this.logMessage('卸下装备失败！');
+            }
+        } catch (error) {
+            console.error('卸下装备时发生错误:', error);
+            this.logMessage('卸下装备时发生错误！');
+        }
+    }
+
+    // 丢弃装备（直接从装备槽位移除）
+    discardEquipment(equipmentSlot) {
+        try {
+            // 检查参数
+            if (!equipmentSlot || typeof equipmentSlot !== 'string') {
+                console.warn('无效的装备槽位:', equipmentSlot);
+                return;
+            }
+
+            // 检查玩家数据
+            if (!this.player || !this.player.equipment) {
+                console.warn('玩家数据无效');
+                return;
+            }
+
+            // 检查装备槽位是否有装备
+            if (!this.player.equipment[equipmentSlot]) {
+                this.logMessage('该槽位没有装备！');
+                return;
+            }
+
+            // 获取要丢弃的装备信息
+            const equipmentToDiscard = this.player.equipment[equipmentSlot];
+            
+            // 直接移除装备（不返回背包）
+            this.player.equipment[equipmentSlot] = null;
+            
+            // 重新计算战斗属性
+            this.player.combatStats = this.player.calculateCombatStats();
+            
+            // 更新当前生命值（如果超过最大值）
+            if (this.player.currentHp > this.player.combatStats.hp) {
+                this.player.currentHp = this.player.combatStats.hp;
+            }
+            
+            this.logMessage(`丢弃了 ${equipmentToDiscard.name}！`);
+            
+            // 更新UI
+            this.updateCharacterPanel();
+            this.savePlayerData();
+        } catch (error) {
+            console.error('丢弃装备时发生错误:', error);
+            this.logMessage('丢弃装备时发生错误！');
+        }
+    }
+
     // 定位悬浮窗
     positionTooltip(e, tooltip) {
         const rect = tooltip.getBoundingClientRect();
@@ -1056,7 +1300,14 @@ class Game {
             if (item.baseStats) {
                 details += '<h5>基础属性：</h5><ul class="item-stats">';
                 for (const [stat, value] of Object.entries(item.baseStats)) {
-                    details += `<li>${this.getStatName(stat)}: +${value}</li>`;
+                    // 小于1的属性显示为百分比
+                    let displayValue = value;
+                    if (value < 1 && value > 0) {
+                        displayValue = '+' + (value * 100).toFixed(0) + '%';
+                    } else {
+                        displayValue = '+' + value;
+                    }
+                    details += `<li>${this.getStatName(stat)}: ${displayValue}</li>`;
                 }
                 details += '</ul>';
             }
@@ -1064,8 +1315,32 @@ class Game {
             if (item.extraStats) {
                 details += '<h5>额外属性：</h5><ul class="item-stats">';
                 item.extraStats.forEach(stat => {
-                    details += `<li>${this.getStatName(stat.stat)}: +${stat.value}</li>`;
+                    // 小于1的属性显示为百分比
+                    let displayValue = stat.value;
+                    if (stat.value < 1 && stat.value > 0) {
+                        displayValue = '+' + (stat.value * 100).toFixed(0) + '%';
+                    } else {
+                        displayValue = '+' + stat.value;
+                    }
+                    details += `<li>${this.getStatName(stat.stat)}: ${displayValue}</li>`;
                 });
+                details += '</ul>';
+            }
+            
+            if (item.specialAttributes) {
+                details += '<h5>特殊属性：</h5><ul class="item-stats">';
+                for (const [attr, value] of Object.entries(item.specialAttributes)) {
+                    // 特殊属性显示逻辑
+                    let displayValue = value;
+                    if (attr === 'lifesteal') {
+                        displayValue = (value * 100).toFixed(0) + '%';
+                    } else if (value < 1 && value > 0) {
+                        displayValue = (value * 100).toFixed(0) + '%';
+                    } else {
+                        displayValue = '+' + value;
+                    }
+                    details += `<li>${this.getStatName(attr)}: ${displayValue}</li>`;
+                }
                 details += '</ul>';
             }
             

@@ -29,6 +29,7 @@ const enemies = [
             gold: { min: 10, max: 30 },
             items: [
                 { itemId: 'wooden_sword', chance: 0.2 },
+                { itemId: 'blood_drain_blade', chance: 1 },
                 { itemId: 'leather_armor', chance: 0.15 },
                 { itemId: 'greater_healing_potion', chance: 1.1 },
                 { itemId: 'skill_book_critical', chance: 1 }
@@ -59,6 +60,7 @@ const enemies = [
             gold: { min: 15, max: 25 },
             items: [
                 { itemId: 'cloth_boots', chance: 0.25 },
+                { itemId: 'blood_drain_blade', chance: 1 },
                 { itemId: 'skill_book_quick_attack', chance: 1 },
                 { itemId: 'greater_healing_potion', chance: 1.1 }
             ]
@@ -68,7 +70,7 @@ const enemies = [
     {
         id: 'slime',
         name: '史莱姆',
-        level: 1,
+        level: 2,
         description: '黏糊糊的史莱姆，攻击力低但生命值较高',
         baseStats: {
             hp: 50,
@@ -87,6 +89,7 @@ const enemies = [
             gold: { min: 8, max: 20 },
             items: [
                 { itemId: 'leather_armor', chance: 0.2 },
+                { itemId: 'blood_drain_blade', chance: 1 },
                 { itemId: 'skill_book_quick_attack', chance: 1 },
                 { itemId: 'greater_healing_potion', chance: 1.1 }
             ]
@@ -120,6 +123,7 @@ const enemies = [
             items: [
                 { itemId: 'iron_sword', chance: 0.3 },
                 { itemId: 'steel_shield', chance: 0.25 },
+                { itemId: 'blood_drain_blade', chance: 0.15 },
                 { itemId: 'skill_book_shield_master', chance: 0.1 },
                 { itemId: 'greater_healing_potion', chance: 0.1 }
             ]
@@ -149,6 +153,7 @@ const enemies = [
             gold: { min: 60, max: 120 },
             items: [
                 { itemId: 'magic_hat', chance: 0.35 },
+                { itemId: 'blood_drain_blade', chance: 0.2 },
                 { itemId: 'skill_book_fireball', chance: 0.15 },
                 { itemId: 'skill_book_mana_efficiency', chance: 0.1 }
             ]
@@ -405,7 +410,7 @@ const enemySkills = {
 function generateEnemy(playerLevel) {
     // 过滤出适合玩家等级的敌人
     const suitableEnemies = enemies.filter(enemy => 
-        enemy.level <= playerLevel + 3 && enemy.level >= Math.max(1, playerLevel - 2)
+        enemy.level <= playerLevel + 0 && enemy.level >= Math.max(1, playerLevel - 2)
     );
     
     // 如果没有合适的敌人，就返回所有敌人

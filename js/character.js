@@ -28,14 +28,14 @@ class Character {
         this.baseCombatStats = { 
             attack: 10,
             magic: 10,
-            speed: 1.0,
-            critRate: 0.01,
-            critDamage: 1.0,
+            speed: 0.5,
+            critRate: 0.05,
+            critDamage: 1.5,
             hp: 100,
             defense: 10,
-            dodgeRate: 0.01,
-            blockRate: 0.01,
-            blockValue: 10,
+            dodgeRate: 0,
+            blockRate: 0,
+            blockValue: 0,
             cdr: 0,
             ...data.baseCombatStats 
         };
@@ -69,6 +69,17 @@ class Character {
         this.canAttack = true;
         this.lastAttackTime = 0;
         
+        // 特殊属性（不在基础属性计算中，由装备或技能提升）
+        this.specialAttributes = {
+            lifesteal: 0,          // 吸血率（0-1），将造成伤害的一部分转化为生命
+            combo: 0,              // 连击率（0-1），普通攻击有概率触发两次
+            regeneration: 0,       // 自愈值，战斗中每秒回复的生命值
+            statusChance: 0,       // 状态施加率（0-1），对敌人造成状态的概率额外提升
+            statusResistance: 0,   // 状态抵抗率（0-1），敌人造成状态的概率会减去此值
+            healingBonus: 0,       // 治疗加成（0-1），增加所有生命恢复的效果
+            luck: 0                // 幸运值，提升物品掉落的概率
+        };
+        
         // 计算战斗属性
         this.combatStats = this.calculateCombatStats();
     }
@@ -85,7 +96,7 @@ class Character {
             magic: formulas.magic ? formulas.magic(baseCombatStats.magic, baseStats) : 10,
             speed: formulas.speed ? formulas.speed(baseCombatStats.speed, baseStats) : 1.0,
             critRate: formulas.critRate ? formulas.critRate(baseCombatStats.critRate, baseStats) : 0.01,
-            critDamage: formulas.critDamage ? formulas.critDamage(baseCombatStats.critDamage, baseStats) : 1.0,
+            critDamage: formulas.critDamage ? formulas.critDamage(baseCombatStats.critDamage, baseStats) : 1.5,
             hp: formulas.hp ? formulas.hp(baseCombatStats.hp, baseStats) : 100,
             defense: formulas.defense ? formulas.defense(baseCombatStats.defense, baseStats) : 10,
             dodgeRate: formulas.dodgeRate ? formulas.dodgeRate(baseCombatStats.dodgeRate, baseStats) : 0.01,
@@ -145,6 +156,15 @@ class Character {
                     }
                 }
             }
+            
+            // 应用特殊属性加成
+            if (item.specialAttributes) {
+                for (const attr in item.specialAttributes) {
+                    if (this.specialAttributes.hasOwnProperty(attr)) {
+                        this.specialAttributes[attr] += item.specialAttributes[attr];
+                    }
+                }
+            }
         }
     }
     
@@ -186,6 +206,24 @@ class Character {
                     }
                 }
             }
+            
+            // 应用特殊属性修改器
+            if (skill.specialAttributeModifiers) {
+                for (const attr in skill.specialAttributeModifiers) {
+                    if (this.specialAttributes.hasOwnProperty(attr)) {
+                        const modifier = skill.specialAttributeModifiers[attr];
+                        
+                        // 判断是百分比加成还是固定加成
+                        if (Math.abs(modifier) < 1 && attr !== 'regeneration') {
+                            // 百分比加成
+                            this.specialAttributes[attr] *= (1 + modifier);
+                        } else {
+                            // 固定加成
+                            this.specialAttributes[attr] += modifier;
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -222,6 +260,23 @@ class Character {
         
         // 确保暴击伤害至少为100%
         stats.critDamage = Math.max(stats.critDamage, 1.0);
+        
+        // 规范化特殊属性
+        this.normalizeSpecialAttributes();
+    }
+    
+    // 规范化特殊属性
+    normalizeSpecialAttributes() {
+        // 确保百分比类特殊属性在合理范围内
+        this.specialAttributes.lifesteal = Math.min(Math.max(this.specialAttributes.lifesteal, 0), 0.8); // 最高80%吸血率
+        this.specialAttributes.combo = Math.min(Math.max(this.specialAttributes.combo, 0), 0.5); // 最高50%连击率
+        this.specialAttributes.statusChance = Math.min(Math.max(this.specialAttributes.statusChance, 0), 0.9); // 最高90%状态施加率
+        this.specialAttributes.statusResistance = Math.min(Math.max(this.specialAttributes.statusResistance, 0), 0.8); // 最高80%状态抵抗率
+        this.specialAttributes.healingBonus = Math.min(Math.max(this.specialAttributes.healingBonus, 0), 5); // 最高500%治疗加成
+        this.specialAttributes.luck = Math.max(this.specialAttributes.luck, 0); // 最低0幸运值
+        
+        // 确保自愈值不会太高
+        this.specialAttributes.regeneration = Math.min(Math.max(this.specialAttributes.regeneration, 0), 100); // 最高每秒回复100生命
     }
     
     // 分配属性点

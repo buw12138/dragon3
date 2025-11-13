@@ -311,12 +311,14 @@ class BattleManager {
         
         // 检查特殊效果触发（简化版）
         if (attacker === this.player && actualDamage > 0) {
-            // 检查吸血效果
-            const lifesteal = attacker.combatStats?.lifesteal || 0;
-            if (lifesteal > 0) {
-                const healAmount = Math.floor(actualDamage * lifesteal);
-                attacker.heal(healAmount);
-                this.addBattleLog(`${attacker.name}通过吸血恢复了${healAmount}点生命值！`);
+            // 计算治疗量（考虑吸血属性）
+            let lifestealAmount = 0;
+            if (attacker.specialAttributes && attacker.specialAttributes.lifesteal > 0) {
+                lifestealAmount = Math.round(actualDamage * attacker.specialAttributes.lifesteal);
+                if (lifestealAmount > 0) {
+                    attacker.heal(lifestealAmount);
+                    this.addBattleLog(`${attacker.name} 触发吸血效果，恢复 ${lifestealAmount} 生命值`);
+                }
             }
             
             // 检查击退/击晕效果（简化版，概率触发）
