@@ -354,15 +354,31 @@ function getSkillById(skillId) {
 function formatCombatStat(statName, value) {
     switch (statName) {
         case 'critRate':
+            return (value * 100).toFixed(2) + '%';
         case 'dodgeRate':
+            return (value * 100).toFixed(2) + '%';
         case 'blockRate':
-
+            return (value * 100).toFixed(2) + '%';
         case 'cdr':
-            return (value * 100).toFixed(1) + '%';
+            return (value * 100).toFixed(2) + '%';
         case 'critDamage':
-            return (value * 100).toFixed(0) + '%';
+            return (value * 100).toFixed(2) + '%';
         case 'speed':
             return value.toFixed(2);
+        case 'lifesteal':
+            return (value * 100).toFixed(2) + '%';
+        case 'combo':
+            return (value * 100).toFixed(2) + '%';
+        case 'regeneration':
+            return value.toFixed(0);
+        case 'statusChance':
+            return (value * 100).toFixed(2) + '%';
+        case 'statusResistance':
+            return (value * 100).toFixed(2) + '%';
+        case 'healingBonus':
+            return (value * 100).toFixed(2) + '%';
+        case 'luck':
+            return value.toFixed(0);
         default:
             return Math.floor(value).toString();
     }

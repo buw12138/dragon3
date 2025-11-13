@@ -309,16 +309,32 @@ class Character {
         // 保存当前装备（如果有）
         const oldItem = this.equipment[slot];
         
+        // 如果有旧装备，先执行完整的卸下流程
+        if (oldItem) {
+            // 先处理旧装备的特殊属性减少
+            if (oldItem.specialAttributes) {
+                for (const attr in oldItem.specialAttributes) {
+                    if (this.specialAttributes.hasOwnProperty(attr)) {
+                        const oldValue = this.specialAttributes[attr];
+                        this.specialAttributes[attr] -= oldItem.specialAttributes[attr];
+                    }
+                }
+            }
+        }
+        
         // 装备新物品
         this.equipment[slot] = item;
         
-        // 重新计算战斗属性
+        // 重新计算战斗属性（会处理新装备的加成）
         this.combatStats = this.calculateCombatStats();
         
         // 更新当前生命值（如果最大生命值改变）
-        const maxHpDifference = this.combatStats.hp - (this.currentHp + (oldItem?.baseStats?.hp || 0));
-        if (maxHpDifference > 0) {
-            this.currentHp += maxHpDifference;
+        if (oldItem?.baseStats?.hp) {
+            // 如果卸下的装备增加了HP，需要相应减少当前HP
+            this.currentHp = Math.min(this.currentHp, this.combatStats.hp);
+        } else if (this.currentHp > this.combatStats.hp) {
+            // 如果当前HP超过新最大值，调整到最大值
+            this.currentHp = this.combatStats.hp;
         }
         
         return oldItem; // 返回被替换的旧装备
@@ -330,6 +346,15 @@ class Character {
         
         const item = this.equipment[slot];
         this.equipment[slot] = null;
+        
+        // 修复：卸下装备时正确减少特殊属性
+        if (item.specialAttributes) {
+            for (const attr in item.specialAttributes) {
+                if (this.specialAttributes.hasOwnProperty(attr)) {
+                    this.specialAttributes[attr] -= item.specialAttributes[attr];
+                }
+            }
+        }
         
         // 重新计算战斗属性
         this.combatStats = this.calculateCombatStats();
