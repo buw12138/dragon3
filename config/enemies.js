@@ -32,7 +32,7 @@ const enemies = [
                 { itemId: 'blood_drain_blade', chance: 1 },
                 { itemId: 'leather_armor', chance: 0.15 },
                 { itemId: 'greater_healing_potion', chance: 1.1 },
-                { itemId: 'skill_book_critical', chance: 1 }
+                { itemId: 'skill_book_fireball', chance: 1 }
             ]
         },
         // 经验值奖励
@@ -90,7 +90,7 @@ const enemies = [
             items: [
                 { itemId: 'leather_armor', chance: 0.2 },
                 { itemId: 'blood_drain_blade', chance: 1 },
-                { itemId: 'skill_book_quick_attack', chance: 1 },
+                { itemId: 'skill_book_heal', chance: 1 },
                 { itemId: 'greater_healing_potion', chance: 1.1 }
             ]
         },
@@ -124,7 +124,7 @@ const enemies = [
                 { itemId: 'iron_sword', chance: 0.3 },
                 { itemId: 'steel_shield', chance: 0.25 },
                 { itemId: 'blood_drain_blade', chance: 0.15 },
-                { itemId: 'skill_book_shield_master', chance: 0.1 },
+                { itemId: 'skill_book_shield_master', chance: 1.1 },
                 { itemId: 'greater_healing_potion', chance: 0.1 }
             ]
         },

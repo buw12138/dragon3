@@ -496,12 +496,30 @@ class BattleManager {
                 this.addBattleLog('获得了技能书：');
                 for (const skillBook of rewards.skills) {
                     this.addBattleLog(`- ${skillBook.name}`);
+                    
+                    // 检查玩家是否已经学会这个技能书对应的技能
+                    if (this.player && window.game) {
+                        const player = this.player;
+                        const playerSkills = player.learnedSkills || [];
+                        
+                        if (playerSkills.includes(skillBook.skillId)) {
+                            // 玩家已经学会这个技能，直接丢弃技能书
+                            this.addBattleLog(`你已学会${skillBook.name.replace('技能书：', '')}，将技能书丢弃了。`);
+                            if (window.game && window.game.logMessage) {
+                                window.game.logMessage(`你已学会这个技能，丢弃了${skillBook.name}！`);
+                            }
+                            continue; // 跳过添加到背包的逻辑
+                        }
+                    }
+                    
                     // 检查背包容量并将技能书添加到背包
                     if (this.player && this.player.inventory) {
                         const maxSlots = this.player.backpackSlots || 12;
                         if (this.player.inventory.length < maxSlots) {
                             this.player.inventory.push(skillBook);
                             this.addBattleLog(`获得了技能书：${skillBook.name}`);
+                            // 只有真正获得技能书才添加到显示列表
+                            rewards.items.push(skillBook);
                         } else {
                             // 背包已满，显示提示信息
                             this.addBattleLog(`警告：背包已满，无法获得${skillBook.name}`);
@@ -511,8 +529,6 @@ class BattleManager {
                             }
                         }
                     }
-                    // 将技能书也添加到items数组，以便在战斗胜利面板中显示
-                    rewards.items.push(skillBook);
                 }
             }
         } else {
