@@ -686,6 +686,12 @@ body {
     line-height: 1.4;
 }
 
+.skill-tooltip .tooltip-probability {
+    font-size: 12px;
+    color: #FFD700;
+    margin-bottom: 5px;
+}
+
 .skill-tooltip .tooltip-requirements {
     font-size: 12px;
     color: #4CAF50;

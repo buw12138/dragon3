@@ -1754,6 +1754,7 @@ class Game {
             tooltip.innerHTML = `
                 <div class="tooltip-title">${skill.name}</div>
                 <div class="tooltip-type">类型: ${skill.type === 'active' ? '主动' : '被动'}</div>
+                ${skill.type === 'active' ? `<div class="tooltip-probability">触发概率: ${((skill.baseProbability || 0.4) * 100).toFixed(0)}%</div>` : ''}
                 <div class="tooltip-description">${skill.description}</div>
             `;
             
