@@ -403,6 +403,160 @@ const enemySkills = {
             return { message: `${user.name} 射出了黑暗闪电，对 ${target.name} 造成了 ${damage} 点魔法伤害！` };
         },
         probability: 0.2
+    },
+    dragon_cleave: {
+        name: '龙爪撕裂',
+        type: 'active',
+        description: '用锋利的龙爪撕裂敌人',
+        effect: (user, target) => {
+            const damage = Math.floor(user.baseStats.attack * 1.8);
+            target.takeDamage(damage, '物理');
+            return { message: `${user.name} 使用了龙爪撕裂，对 ${target.name} 造成了 ${damage} 点伤害！` };
+        },
+        probability: 0.35
+    },
+    dragon_roar: {
+        name: '龙之咆哮',
+        type: 'active',
+        description: '震耳欲聋的龙吟，降低敌人防御',
+        effect: (user, target) => {
+            target.addStatusEffect('debuffed', 6000);
+            return { message: `${user.name} 发出了震耳欲聋的咆哮，降低了 ${target.name} 的防御！` };
+        },
+        probability: 0.25
+    },
+    holy_shield: {
+        name: '神圣护盾',
+        type: 'active',
+        description: '为自己施加神圣护盾，减少受到的伤害',
+        effect: (user, target) => {
+            user.addStatusEffect('buffed', 8000);
+            return { message: `${user.name} 施展了神圣护盾，自身防御得到了提升！` };
+        },
+        probability: 0.2
+    },
+    death_bolt: {
+        name: '死亡箭矢',
+        type: 'active',
+        description: '射出充满死亡力量的箭矢',
+        effect: (user, target) => {
+            const damage = Math.floor(user.baseStats.magic * 2.2);
+            target.takeDamage(damage, '魔法');
+            if (Math.random() < 0.15) {
+                target.addStatusEffect('poisoned', 4000);
+                return { message: `${user.name} 射出了死亡箭矢，对 ${target.name} 造成了 ${damage} 点伤害，并使其中毒！` };
+            }
+            return { message: `${user.name} 射出了死亡箭矢，对 ${target.name} 造成了 ${damage} 点伤害！` };
+        },
+        probability: 0.3
+    },
+    summon_undead: {
+        name: '召唤亡灵',
+        type: 'active',
+        description: '召唤亡灵协助作战',
+        effect: (user, target) => {
+            return { message: `${user.name} 召唤了亡灵生物协助作战！` };
+        },
+        probability: 0.15
+    },
+    life_drain: {
+        name: '生命汲取',
+        type: 'active',
+        description: '汲取敌人的生命值',
+        effect: (user, target) => {
+            const damage = Math.floor(user.baseStats.magic * 1.5);
+            const actualDamage = target.takeDamage(damage, '魔法');
+            const healAmount = Math.floor(actualDamage * 0.7);
+            user.heal(healAmount);
+            return { message: `${user.name} 汲取了 ${target.name} 的生命值，造成 ${actualDamage} 点伤害并恢复了 ${healAmount} 点生命值！` };
+        },
+        probability: 0.25
+    },
+    tail_swipe: {
+        name: '龙尾横扫',
+        type: 'active',
+        description: '用强力的龙尾横扫攻击',
+        effect: (user, target) => {
+            const damage = Math.floor(user.baseStats.attack * 1.6);
+            target.takeDamage(damage, '物理');
+            if (Math.random() < 0.2) {
+                target.addStatusEffect('stunned', 1500);
+                return { message: `${user.name} 发动了龙尾横扫，对 ${target.name} 造成了 ${damage} 点伤害，并使其眩晕！` };
+            }
+            return { message: `${user.name} 发动了龙尾横扫，对 ${target.name} 造成了 ${damage} 点伤害！` };
+        },
+        probability: 0.4
+    },
+    wing_blast: {
+        name: '翼展风暴',
+        type: 'active',
+        description: '巨大的龙翼掀起风暴',
+        effect: (user, target) => {
+            const damage = Math.floor(user.baseStats.attack * 1.4);
+            target.takeDamage(damage, '物理');
+            target.addStatusEffect('debuffed', 5000);
+            return { message: `${user.name} 发动了翼展风暴，对 ${target.name} 造成了 ${damage} 点伤害，并降低了其攻击能力！` };
+        },
+        probability: 0.3
+    },
+    dragon_rage: {
+        name: '龙之狂暴',
+        type: 'active',
+        description: '进入狂暴状态，攻击力和攻击速度大幅提升',
+        effect: (user, target) => {
+            user.addStatusEffect('buffed', 10000);
+            return { message: `${user.name} 进入了龙之狂暴状态，自身能力大幅提升！` };
+        },
+        probability: 0.12
+    },
+    shadow_blade: {
+        name: '暗影刀刃',
+        type: 'active',
+        description: '暗影凝聚而成的致命刀刃',
+        effect: (user, target) => {
+            const damage = Math.floor((user.baseStats.attack + user.baseStats.magic) * 1.9);
+            target.takeDamage(damage, '物理');
+            return { message: `${user.name} 挥舞着暗影刀刃，对 ${target.name} 造成了 ${damage} 点伤害！` };
+        },
+        probability: 0.28
+    },
+    inferno: {
+        name: '地狱烈焰',
+        type: 'active',
+        description: '召唤地狱的恐怖烈焰',
+        effect: (user, target) => {
+            const damage = Math.floor(user.baseStats.magic * 2.8);
+            target.takeDamage(damage, '火焰');
+            target.addStatusEffect('burned', 6000);
+            return { message: `${user.name} 召唤了地狱烈焰，对 ${target.name} 造成了 ${damage} 点火焰伤害，并使其燃烧！` };
+        },
+        probability: 0.18
+    },
+    dark_regeneration: {
+        name: '黑暗再生',
+        type: 'active',
+        description: '黑暗力量恢复自身生命值',
+        effect: (user, target) => {
+            const healAmount = Math.floor(user.baseStats.hp * 0.25);
+            user.heal(healAmount);
+            return { message: `${user.name} 通过黑暗力量恢复了 ${healAmount} 点生命值！` };
+        },
+        probability: 0.22
+    },
+    doom: {
+        name: '末日裁决',
+        type: 'active',
+        description: '毁灭性的终极技能',
+        effect: (user, target) => {
+            const damage = Math.floor((user.baseStats.attack + user.baseStats.magic) * 3.5);
+            target.takeDamage(damage, '混合');
+            if (Math.random() < 0.3) {
+                target.addStatusEffect('paralyzed', 3000);
+                return { message: `${user.name} 发动了末日裁决，对 ${target.name} 造成了 ${damage} 点毁灭性伤害，并使其麻痹！` };
+            }
+            return { message: `${user.name} 发动了末日裁决，对 ${target.name} 造成了 ${damage} 点毁灭性伤害！` };
+        },
+        probability: 0.1
     }
 };
 

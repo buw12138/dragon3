@@ -21,9 +21,6 @@ class BattleManager {
         // 战斗回调
         this.onBattleEnd = null;
         
-        // 技能释放概率配置
-        this.skillCastChance = 0.3; // 30%几率释放技能
-        
         // 技能冷却（毫秒）
         this.skillsOnCooldown = {};
         
@@ -225,10 +222,23 @@ class BattleManager {
         // 检查是否释放技能
         const availableSkills = this.player.getAvailableActiveSkills();
         
-        if (availableSkills.length > 0 && Math.random() < this.skillCastChance) {
-            // 随机选择一个可用技能
-            const skill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-            this.castSkill(this.player, skill, this.enemy);
+        if (availableSkills.length > 0) {
+            // 检查每个技能的概率，独立决定是否使用
+            let usedSkill = false;
+            for (const skill of availableSkills) {
+                // 使用技能的baseProbability，默认值0.4
+                const skillProbability = skill.baseProbability || 0.4;
+                if (Math.random() < skillProbability) {
+                    this.castSkill(this.player, skill, this.enemy);
+                    usedSkill = true;
+                    break; // 使用了一个技能就退出
+                }
+            }
+            
+            // 如果没有使用任何技能，则普通攻击
+            if (!usedSkill) {
+                this.performBasicAttack(this.player, this.enemy);
+            }
         } else {
             // 普通攻击
             this.performBasicAttack(this.player, this.enemy);
@@ -246,14 +256,20 @@ class BattleManager {
         const attackPattern = behavior.attackPattern || 'normal';
         
         // 所有敌人都应该能够攻击，根据attackPattern决定攻击方式
-        if (behavior.useSkills && behavior.skills && behavior.skills.length > 0 && Math.random() < 0.4) {
-            // 随机选择一个可用技能
-            const skillId = behavior.skills[Math.floor(Math.random() * behavior.skills.length)];
-            const enemySkill = window.enemySkills[skillId];
+        if (behavior.useSkills && behavior.skills && behavior.skills.length > 0) {
+            // 检查每个技能的概率，独立决定是否使用
+            let usedSkill = false;
+            for (const skillId of behavior.skills) {
+                const enemySkill = window.enemySkills[skillId];
+                if (enemySkill && Math.random() < (enemySkill.probability || 0.4)) {
+                    this.castEnemySkill(this.enemy, enemySkill, this.player);
+                    usedSkill = true;
+                    break; // 使用了一个技能就退出
+                }
+            }
             
-            if (enemySkill) {
-                this.castEnemySkill(this.enemy, enemySkill, this.player);
-            } else {
+            // 如果没有使用任何技能，则普通攻击
+            if (!usedSkill) {
                 this.performBasicAttack(this.enemy, this.player);
             }
         } else {
