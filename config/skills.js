@@ -12,20 +12,19 @@ const skills = [
         requirements: {intelligence: 5}, // 智力达到5才能学习
         // 技能效果函数，在战斗系统中调用
         effect: (user, target) => {
-            // 计算基础伤害
-            let damage = user.combatStats.attack * 1.5;
+            // 使用统一的伤害计算流程
+            if (!window.battleManager) {
+                return { message: '战斗管理器未初始化' };
+            }
             
-            // 应用伤害波动范围
-            const damageVariance = Number(user.combatStats?.damageVariance) || 0.1;
-            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
-            damage = damage * varianceMultiplier;
-            
-            // 应用伤害
-            const actualDamage = target.takeDamage(damage, '物理');
+            const baseDamage = user.combatStats.attack * 1.5;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
             return { 
-                message: `${user.name} 使用了横扫千军，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点伤害！`,
-                actualDamage: actualDamage
+                message: `${user.name} 使用了横扫千军，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
             };
         },
         // 技能使用条件
@@ -43,28 +42,27 @@ const skills = [
         description: '投掷一个火球，造成180%魔力的伤害',
         requirements: { intelligence: 15 }, // 需要15点智力
         effect: (user, target) => {
-            // 计算基础伤害
-            let damage = user.combatStats.magic * 1.8;
+            // 使用统一的伤害计算流程
+            if (!window.battleManager) {
+                return { message: '战斗管理器未初始化' };
+            }
             
-            // 应用伤害波动范围
-            const damageVariance = Number(user.combatStats?.damageVariance) || 0.1;
-            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
-            damage = damage * varianceMultiplier;
-            
-            // 应用伤害
-            const actualDamage = target.takeDamage(damage, '魔法');
+            const baseDamage = user.combatStats.magic * 1.8;
+            const damageType = '魔法';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
             return { 
-                message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点魔法伤害！`,
+                message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
                 damageType: 'fire',
-                actualDamage: actualDamage
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
             };
         },
         canUse: (user) => {
             // 消耗一定魔力
             return user.currentMp >= 20;
         },
-        baseProbability: 0.15,
+        baseProbability: 0.8,
         mpCost: 20
     },
     {
@@ -95,32 +93,32 @@ const skills = [
         description: '召唤雷电攻击敌人，造成200%魔力的伤害，并可能使其麻痹',
         requirements: { intelligence: 25 }, // 需要25点智力
         effect: (user, target) => {
-            // 计算基础伤害
-            let damage = user.combatStats.magic * 2.0;
+            // 使用统一的伤害计算流程
+            if (!window.battleManager) {
+                return { message: '战斗管理器未初始化' };
+            }
             
-            // 应用伤害波动范围
-            const damageVariance = Number(user.combatStats?.damageVariance) || 0.1;
-            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
-            damage = damage * varianceMultiplier;
-            
-            // 应用伤害
-            const actualDamage = target.takeDamage(damage, '魔法');
+            const baseDamage = user.combatStats.magic * 2.0;
+            const damageType = '魔法';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
             // 30%几率使敌人麻痹
             if (Math.random() < 0.3) {
                 target.addStatusEffect('paralyzed', 2000); // 麻痹2秒
                 return { 
-                    message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点魔法伤害，并使其麻痹！`,
+                    message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害，并使其麻痹！${damageResult.isCritical ? ' 暴击！' : ''}`,
                     damageType: 'thunder',
                     statusEffect: 'paralyzed',
-                    actualDamage: actualDamage
+                    actualDamage: damageResult.actualDamage,
+                    isCritical: damageResult.isCritical
                 };
             }
             
             return { 
-                message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点魔法伤害！`,
+                message: `${user.name} 召唤了雷击，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
                 damageType: 'thunder',
-                actualDamage: actualDamage
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
             };
         },
         canUse: (user) => {
@@ -136,20 +134,20 @@ const skills = [
         description: '旋转攻击周围敌人，造成120%攻击力的伤害',
         requirements: { strength: 20 }, // 需要20点力量
         effect: (user, target) => {
-            let damage = user.combatStats.attack * 1.2;
+            // 使用统一的伤害计算流程
+            if (!window.battleManager) {
+                return { message: '战斗管理器未初始化' };
+            }
             
-            // 应用伤害波动
-            const damageVariance = user.combatStats.damageVariance || 0.1;
-            const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
-            damage = damage * varianceMultiplier;
-            
-            // 应用伤害
-            const actualDamage = target.takeDamage(damage, '物理');
+            const baseDamage = user.combatStats.attack * 1.2;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
             // 可以攻击多个目标（在当前版本简化为单体）
             return { 
-                message: `${user.name} 使用了旋风斩，对 ${target.name} 造成了 ${Math.floor(actualDamage)} 点伤害！`,
-                actualDamage: actualDamage
+                message: `${user.name} 使用了旋风斩，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
             };
         },
         canUse: (user) => {

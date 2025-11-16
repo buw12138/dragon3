@@ -283,67 +283,31 @@ class BattleManager {
     
     // 执行普通攻击
     performBasicAttack(attacker, target) {
-        // 计算伤害，确保是有效数字
-        let damage = Number(attacker.combatStats?.attack) || Number(attacker.baseStats?.attack) || 10;
-        damage = Math.max(1, damage); // 确保伤害至少为1
+        // 计算基础伤害
+        const baseDamage = Number(attacker.combatStats?.attack) || Number(attacker.baseStats?.attack) || 10;
         
-        // 应用伤害波动范围
-        const damageVariance = Number(attacker.combatStats?.damageVariance) || 0.1;
-        const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
-        damage = damage * varianceMultiplier;
-        
-        // 检查暴击
-        const critRate = Number(attacker.combatStats?.critRate) || Number(attacker.baseStats?.critRate) || 0;
-        const isCritical = Utils.checkCritical(critRate);
-        if (isCritical) {
-            const critDamageMultiplier = Number(attacker.combatStats?.critDamage) || Number(attacker.baseStats?.critDamage) || 1.5;
-            damage = Math.floor(damage * critDamageMultiplier);
-        }
-        
-        // 应用伤害
-        const damageType = attacker === this.player ? '物理' : '物理';
-        const actualDamage = target.takeDamage(damage, damageType);
-        
-        // 确保actualDamage是有效数字并且是整数
-        const displayDamage = isNaN(actualDamage) ? 0 : Math.max(0, Math.floor(actualDamage));
-        
-        // 如果造成了伤害，添加受击震动效果
-        if (actualDamage > 0) {
-            this.applyHitEffect(target);
-        }
+        // 使用统一的伤害计算和应用流程
+        const damageType = '物理';
+        const damageResult = this.calculateAndApplyDamage(attacker, target, baseDamage, damageType);
         
         // 记录战斗日志
         let message = `${attacker.name}攻击了${target.name}！`;
-        if (displayDamage === 0) {
+        if (damageResult.actualDamage === 0) {
             message += ' 但是被闪避了！';
         } else {
-            if (isCritical) {
+            if (damageResult.isCritical) {
                 message += ' 暴击！';
             }
-            message += ` [${displayDamage}伤害]`;
+            message += ` [${damageResult.actualDamage}伤害]`;
         }
         
         this.addBattleLog(message);
         
-        // 检查特殊效果触发（简化版）
-        if (attacker === this.player && actualDamage > 0) {
-            // 计算治疗量（考虑吸血属性）
-            let lifestealAmount = 0;
-            if (attacker.specialAttributes && attacker.specialAttributes.lifesteal > 0) {
-                lifestealAmount = Math.round(actualDamage * attacker.specialAttributes.lifesteal);
-                if (lifestealAmount > 0) {
-                    attacker.heal(lifestealAmount);
-                    this.addBattleLog(`${attacker.name} 触发吸血效果，恢复 ${lifestealAmount} 生命值`);
-                }
-            }
-            
-            // 检查击退/击晕效果（简化版，概率触发）
-            const stunChance = attacker.combatStats?.stunChance || 0;
-            if (stunChance > 0 && Math.random() < stunChance) {
-                target.addStatusEffect('stunned', 1000); // 眩晕1秒
-                this.addBattleLog(`${target.name}被眩晕了！`);
-            }
-        }
+        // 处理伤害后的特殊效果
+        const effects = this.handlePostDamageEffects(attacker, target, damageResult, damageType);
+        effects.forEach(effectMessage => {
+            this.addBattleLog(effectMessage);
+        });
     }
     
     // 释放技能
@@ -429,6 +393,91 @@ class BattleManager {
         }
     }
     
+    // 统一的伤害计算流程
+    calculateDamage(attacker, baseDamage, damageType = '物理') {
+        // 确保基础伤害是有效数字
+        let damage = Number(baseDamage) || 0;
+        damage = Math.max(0, damage); // 确保伤害不为负数
+        
+        // 应用伤害波动范围
+        const damageVariance = Number(attacker.combatStats?.damageVariance) || 0.1;
+        const varianceMultiplier = 1 + (Math.random() - 0.5) * 2 * damageVariance;
+        damage = Math.floor(damage * varianceMultiplier); // 确保取整
+        
+        // 检查暴击
+        const critRate = Number(attacker.combatStats?.critRate) || Number(attacker.baseStats?.critRate) || 0;
+        const isCritical = Utils.checkCritical(critRate);
+        if (isCritical) {
+            const critDamageMultiplier = Number(attacker.combatStats?.critDamage) || Number(attacker.baseStats?.critDamage) || 1.5;
+            damage = Math.floor(damage * critDamageMultiplier);
+        }
+        
+        return {
+            damage: Math.floor(damage),
+            isCritical: isCritical,
+            actualDamage: 0 // 将在应用伤害时确定
+        };
+    }
+    
+    // 计算并应用伤害的统一方法（避免副作用）
+    calculateAndApplyDamage(attacker, target, baseDamage, damageType) {
+        // 计算伤害
+        const damageCalculation = this.calculateDamage(attacker, baseDamage, damageType);
+        
+        // 应用伤害到目标
+        const actualDamage = Math.floor(target.takeDamage(damageCalculation.damage, damageType));
+        
+        // 如果造成了伤害，添加受击震动效果
+        if (actualDamage > 0) {
+            this.applyHitEffect(target);
+        }
+        
+        // 返回完整的伤害结果（确保所有值都是整数）
+        return {
+            damage: damageCalculation.damage,
+            isCritical: damageCalculation.isCritical,
+            actualDamage: actualDamage
+        };
+    }
+    
+    // 应用伤害的统一方法（保留用于特殊情况）
+    applyDamage(target, damageCalculation, damageType) {
+        // 应用伤害到目标（使用计算出的基础伤害）
+        const actualDamage = target.takeDamage(damageCalculation.damage, damageType);
+        
+        // 更新damageCalculation中的实际伤害值
+        damageCalculation.actualDamage = actualDamage;
+        
+        // 返回实际应用的伤害值
+        return actualDamage;
+    }
+    
+    // 处理伤害后的特殊效果
+    handlePostDamageEffects(attacker, target, damageResult, damageType) {
+        const effects = [];
+        
+        // 如果造成了伤害
+        if (damageResult.actualDamage > 0) {
+            // 吸血效果
+            if (attacker.specialAttributes && attacker.specialAttributes.lifesteal > 0) {
+                const lifestealAmount = Math.floor(damageResult.actualDamage * attacker.specialAttributes.lifesteal);
+                if (lifestealAmount > 0) {
+                    attacker.heal(lifestealAmount);
+                    effects.push(`${attacker.name} 触发吸血效果，恢复 ${lifestealAmount} 生命值`);
+                }
+            }
+            
+            // 击退/击晕效果（基于状态施加率）
+            const statusChance = attacker.specialAttributes?.statusChance || 0;
+            if (statusChance > 0 && Math.random() < statusChance) {
+                target.addStatusEffect('stunned', 1000); // 眩晕1秒
+                effects.push(`${target.name}被眩晕了！`);
+            }
+        }
+        
+        return effects;
+    }
+
     // 检查战斗是否结束
     checkBattleEnd() {
         if (!this.player || !this.enemy) return true;
@@ -504,10 +553,7 @@ class BattleManager {
                         
                         if (playerSkills.includes(skillBook.skillId)) {
                             // 玩家已经学会这个技能，直接丢弃技能书
-                            this.addBattleLog(`你已学会${skillBook.name.replace('技能书：', '')}，将技能书丢弃了。`);
-                            if (window.game && window.game.logMessage) {
-                                window.game.logMessage(`你已学会这个技能，丢弃了${skillBook.name}！`);
-                            }
+                            this.addBattleLog(`你已学会【${skillBook.name.replace('技能书：', '')}】，将技能书丢弃了。`);
                             continue; // 跳过添加到背包的逻辑
                         }
                     }

@@ -321,15 +321,24 @@ const enemySkills = {
         type: 'active',
         description: '强力的一击，有几率击晕目标',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.attack * 1.5);
-            target.takeDamage(damage, '物理');
+            const baseDamage = user.combatStats.attack * 1.5;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
             if (Math.random() < 0.3) {
                 target.addStatusEffect('stunned', 1000);
-                return { message: `${user.name} 使用了兽人猛击，对 ${target.name} 造成了 ${damage} 点伤害，并使其眩晕！` };
+                return { 
+                    message: `${user.name} 使用了兽人猛击，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害，并使其眩晕！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                    actualDamage: damageResult.actualDamage,
+                    isCritical: damageResult.isCritical
+                };
             }
             
-            return { message: `${user.name} 使用了兽人猛击，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            return { 
+                message: `${user.name} 使用了兽人猛击，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.2
     },
@@ -338,15 +347,26 @@ const enemySkills = {
         type: 'active',
         description: '投掷一个火球攻击敌人',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.magic * 1.8);
-            target.takeDamage(damage, '魔法');
+            const baseDamage = user.combatStats.magic * 1.8;
+            const damageType = '魔法';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
             if (Math.random() < 0.2) {
                 target.addStatusEffect('burned', 3000);
-                return { message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${damage} 点魔法伤害，并使其燃烧！` };
+                return { 
+                    message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害，并使其燃烧！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                    damageType: 'fire',
+                    actualDamage: damageResult.actualDamage,
+                    isCritical: damageResult.isCritical
+                };
             }
             
-            return { message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${damage} 点魔法伤害！` };
+            return { 
+                message: `${user.name} 释放了火球术，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                damageType: 'fire',
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.25
     },
@@ -365,18 +385,16 @@ const enemySkills = {
         type: 'active',
         description: '射出一支穿透性的箭矢',
         effect: (user, target) => {
-            // 确保属性存在且为有效数字
-            const userAttack = Number(user.combatStats?.attack) || Number(user.baseStats?.attack) || 10;
-            const targetDefense = Number(target.combatStats?.defense) || Number(target.baseStats?.defense) || 0;
+            const effectiveDefense = (Number(target.combatStats?.defense) || Number(target.baseStats?.defense) || 0)*0.7;
+            const baseDamage = user.combatStats.attack * 1.3 - effectiveDefense;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
             
-            // 计算伤害
-            const damage = Math.floor(userAttack * 1.3);
-            // 忽略目标部分防御
-            const effectiveDefense = targetDefense * 0.7;
-            const actualDamage = Math.max(1, Math.floor(damage - effectiveDefense));
-            
-            target.takeDamage(actualDamage, '物理');
-            return { message: `${user.name} 射出了穿刺箭，对 ${target.name} 造成了 ${actualDamage} 点伤害，穿透了其防御！` };
+            return { 
+                message: `${user.name} 射出了穿刺箭，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害，穿透了其防御！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.3
     },
@@ -386,10 +404,16 @@ const enemySkills = {
         type: 'active',
         description: '喷出毁灭性的龙炎',
         effect: (user, target) => {
-            const damage = Math.floor((user.baseStats.attack + user.baseStats.magic) * 2.0);
-            target.takeDamage(damage, '火焰');
+            const baseDamage = (user.combatStats.attack + user.combatStats.magic) * 2.0;
+            const damageType = '火焰';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
             target.addStatusEffect('burned', 5000);
-            return { message: `${user.name} 喷出了龙炎吐息，对 ${target.name} 造成了 ${damage} 点火焰伤害，并使其燃烧！` };
+            return { 
+                message: `${user.name} 喷出了龙炎吐息，对 ${target.name} 造成了 ${damageResult.actualDamage} 点火焰伤害，并使其燃烧！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.15
     },
@@ -398,9 +422,15 @@ const enemySkills = {
         type: 'active',
         description: '射出黑暗能量闪电',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.magic * 2.5);
-            target.takeDamage(damage, '魔法');
-            return { message: `${user.name} 射出了黑暗闪电，对 ${target.name} 造成了 ${damage} 点魔法伤害！` };
+            const baseDamage = user.combatStats.magic * 2.5;
+            const damageType = '魔法';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
+            return { 
+                message: `${user.name} 射出了黑暗闪电，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.2
     },
@@ -409,9 +439,15 @@ const enemySkills = {
         type: 'active',
         description: '用锋利的龙爪撕裂敌人',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.attack * 1.8);
-            target.takeDamage(damage, '物理');
-            return { message: `${user.name} 使用了龙爪撕裂，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            const baseDamage = user.combatStats.attack * 1.8;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
+            return { 
+                message: `${user.name} 使用了龙爪撕裂，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.35
     },
@@ -440,13 +476,25 @@ const enemySkills = {
         type: 'active',
         description: '射出充满死亡力量的箭矢',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.magic * 2.2);
-            target.takeDamage(damage, '魔法');
+            const baseDamage = user.combatStats.magic * 2.2;
+            const damageType = '魔法';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
             if (Math.random() < 0.15) {
                 target.addStatusEffect('poisoned', 4000);
-                return { message: `${user.name} 射出了死亡箭矢，对 ${target.name} 造成了 ${damage} 点伤害，并使其中毒！` };
+                return { 
+                    message: `${user.name} 射出了死亡箭矢，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害，并使其中毒！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                    statusEffect: 'poisoned',
+                    actualDamage: damageResult.actualDamage,
+                    isCritical: damageResult.isCritical
+                };
             }
-            return { message: `${user.name} 射出了死亡箭矢，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            
+            return { 
+                message: `${user.name} 射出了死亡箭矢，对 ${target.name} 造成了 ${damageResult.actualDamage} 点魔法伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.3
     },
@@ -464,11 +512,19 @@ const enemySkills = {
         type: 'active',
         description: '汲取敌人的生命值',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.magic * 1.5);
-            const actualDamage = target.takeDamage(damage, '魔法');
-            const healAmount = Math.floor(actualDamage * 0.7);
+            const baseDamage = user.combatStats.magic * 1.5;
+            const damageType = '魔法';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
+            const healAmount = Math.floor(damageResult.actualDamage * 0.7);
             user.heal(healAmount);
-            return { message: `${user.name} 汲取了 ${target.name} 的生命值，造成 ${actualDamage} 点伤害并恢复了 ${healAmount} 点生命值！` };
+            
+            return { 
+                message: `${user.name} 汲取了 ${target.name} 的生命值，造成 ${damageResult.actualDamage} 点魔法伤害并恢复了 ${healAmount} 点生命值！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical,
+                healAmount: healAmount
+            };
         },
         probability: 0.25
     },
@@ -477,13 +533,24 @@ const enemySkills = {
         type: 'active',
         description: '用强力的龙尾横扫攻击',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.attack * 1.6);
-            target.takeDamage(damage, '物理');
+            const baseDamage = user.combatStats.attack * 1.6;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
             if (Math.random() < 0.2) {
                 target.addStatusEffect('stunned', 1500);
-                return { message: `${user.name} 发动了龙尾横扫，对 ${target.name} 造成了 ${damage} 点伤害，并使其眩晕！` };
+                return { 
+                    message: `${user.name} 发动了龙尾横扫，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害，并使其眩晕！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                    actualDamage: damageResult.actualDamage,
+                    isCritical: damageResult.isCritical
+                };
             }
-            return { message: `${user.name} 发动了龙尾横扫，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            
+            return { 
+                message: `${user.name} 发动了龙尾横扫，对 ${target.name} 造成了 ${damageResult.actualDamage} 点伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.4
     },
@@ -492,10 +559,16 @@ const enemySkills = {
         type: 'active',
         description: '巨大的龙翼掀起风暴',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.attack * 1.4);
-            target.takeDamage(damage, '物理');
+            const baseDamage = user.combatStats.attack * 1.4;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
             target.addStatusEffect('debuffed', 5000);
-            return { message: `${user.name} 发动了翼展风暴，对 ${target.name} 造成了 ${damage} 点伤害，并降低了其攻击能力！` };
+            return { 
+                message: `${user.name} 发动了翼展风暴，对 ${target.name} 造成了 ${damageResult.actualDamage} 点物理伤害，并降低了其攻击能力！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.3
     },
@@ -514,9 +587,15 @@ const enemySkills = {
         type: 'active',
         description: '暗影凝聚而成的致命刀刃',
         effect: (user, target) => {
-            const damage = Math.floor((user.baseStats.attack + user.baseStats.magic) * 1.9);
-            target.takeDamage(damage, '物理');
-            return { message: `${user.name} 挥舞着暗影刀刃，对 ${target.name} 造成了 ${damage} 点伤害！` };
+            const baseDamage = (user.combatStats.attack + user.combatStats.magic) * 1.9;
+            const damageType = '物理';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
+            return { 
+                message: `${user.name} 挥舞着暗影刀刃，对 ${target.name} 造成了 ${damageResult.actualDamage} 点物理伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.28
     },
@@ -525,10 +604,16 @@ const enemySkills = {
         type: 'active',
         description: '召唤地狱的恐怖烈焰',
         effect: (user, target) => {
-            const damage = Math.floor(user.baseStats.magic * 2.8);
-            target.takeDamage(damage, '火焰');
+            const baseDamage = user.combatStats.magic * 2.8;
+            const damageType = '火焰';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
             target.addStatusEffect('burned', 6000);
-            return { message: `${user.name} 召唤了地狱烈焰，对 ${target.name} 造成了 ${damage} 点火焰伤害，并使其燃烧！` };
+            return { 
+                message: `${user.name} 召唤了地狱烈焰，对 ${target.name} 造成了 ${damageResult.actualDamage} 点火焰伤害，并使其燃烧！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.18
     },
@@ -548,13 +633,25 @@ const enemySkills = {
         type: 'active',
         description: '毁灭性的终极技能',
         effect: (user, target) => {
-            const damage = Math.floor((user.baseStats.attack + user.baseStats.magic) * 3.5);
-            target.takeDamage(damage, '混合');
+            const baseDamage = (user.combatStats.attack + user.combatStats.magic) * 3.5;
+            const damageType = '混合';
+            const damageResult = window.battleManager.calculateAndApplyDamage(user, target, baseDamage, damageType);
+            
             if (Math.random() < 0.3) {
                 target.addStatusEffect('paralyzed', 3000);
-                return { message: `${user.name} 发动了末日裁决，对 ${target.name} 造成了 ${damage} 点毁灭性伤害，并使其麻痹！` };
+                return { 
+                    message: `${user.name} 发动了末日裁决，对 ${target.name} 造成了 ${damageResult.actualDamage} 点毁灭性伤害，并使其麻痹！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                    actualDamage: damageResult.actualDamage,
+                    isCritical: damageResult.isCritical,
+                    statusEffect: 'paralyzed'
+                };
             }
-            return { message: `${user.name} 发动了末日裁决，对 ${target.name} 造成了 ${damage} 点毁灭性伤害！` };
+            
+            return { 
+                message: `${user.name} 发动了末日裁决，对 ${target.name} 造成了 ${damageResult.actualDamage} 点毁灭性伤害！${damageResult.isCritical ? ' 暴击！' : ''}`,
+                actualDamage: damageResult.actualDamage,
+                isCritical: damageResult.isCritical
+            };
         },
         probability: 0.1
     }
